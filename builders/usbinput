@@ -1,0 +1,19 @@
+#!/bin/bash
+
+build() {
+  add_driver_classes drivers/usb/host drivers/hid/usbhid
+
+  # quirks
+  add_module ohci_hcd
+  add_module ehci_hcd
+  add_module xhci_hcd
+}
+
+helpmsg() {
+  cat<<EOF
+  This hook loads the necessary modules for an usb input device. Detection
+  will take place at runtime. To minimize the modules in the image, add the
+  autodetect hook too.
+EOF
+}
+

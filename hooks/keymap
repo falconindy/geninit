@@ -1,0 +1,20 @@
+#!/bin/sh
+
+if [ ! -e /keymap.bin ]; then
+  exit 1
+fi
+
+echo -n ":: Loading keymap..."
+. /keymap.utf8
+if [ "$UTF8" = "yes" ]; then
+  /usr/bin/kbd_mode -u -C /dev/console
+  printf "\033%%G" >> /dev/console
+  echo 1 > /sys/module/vt/parameters/default_utf8
+else
+  /usr/bin/kbd_mode -a -C /dev/console
+  printf "\033%%@" >> /dev/console
+  echo 0 > /sys/module/vt/parameters/default_utf8
+fi
+/sbin/loadkmap < /keymap.bin
+echo "done."
+

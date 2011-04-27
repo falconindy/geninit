@@ -1,0 +1,4 @@
+#/bin/sh
+
+/sbin/modprobe btrfs
+/sbin/btrfs device scan

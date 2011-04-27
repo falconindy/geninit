@@ -1,0 +1,35 @@
+#!/bin/bash
+
+build() {
+  # this is cleaned up on exit
+
+  find /sys/devices/ -name modalias -exec cat {} + | sort -u | while read alias; do
+    modprobe --resolve-alias "$alias"
+  done | sort -u >>"$autodetect_cache"
+
+  if (( UID == 0 )) || [[ $(groups) = *disk* ]]; then
+    rootfs=$(findmnt -sno fstype /)
+    if [[ $rootfs ]]; then
+      find "$moduledir" -type f \( -name "$fs.ko" -o -name "$fs.ko.gz" \)
+    else
+      err "failed to detect root filesystem"
+    fi
+
+    if [[ -x /sbin/mdadm ]]; then
+      /sbin/mdadm -Esv /dev/hd* /dev/sd* /dev/rd/* /dev/ida/* /dev/cciss/* /dev/ataraid/* /dev/mapper/* |\
+        sed -n 's/.*level=\([^ ]\+\) .*/\1/p' |\
+        sed 's/\<raid[456]\>/raid456/g' | sort -u >> "$moduletmp"
+    fi
+  else
+    err "User does not have proper permissions to read superblocks, raid and filesystem modules are not detected"
+  fi
+}
+
+helpmsg() {
+  cat <<EOF
+  This hook autodetects needed modules for the initramfs. This hook should be
+  placed after base in order to best take advantage of it. Any hooks placed
+  prior to this hook will be installed in full.
+EOF
+}
+

@@ -1,0 +1,15 @@
+# vim:set ft=sh:
+build() {
+    MODULES=""
+    BINARIES=""
+    FILES=""
+    SCRIPT="resume"
+}
+
+help ()
+{
+cat<<HELPEOF
+  This hook initializes support for resuming from Disk.
+  Supports swsusp and suspend2.
+HELPEOF
+}

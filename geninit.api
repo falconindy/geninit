@@ -1,0 +1,182 @@
+#!/bin/bash
+
+#
+# geninit public API
+#
+# To authors of builders:
+#   these functions should be used over other functions in geninit such as
+#   __add_file, which generally have no awareness of things such as $basedir or
+#   $kernver.
+#
+
+shopt -s extglob
+
+
+add_dirpath() { # {{{
+  # add all elements of a path to cpio_filelist
+  #   $1: an absolute path
+
+  [[ $1 == /?* ]] || return 1 # must be an absolute path, but not root itself
+
+  local path=
+  local -a pieces
+
+  IFS='/' read -ra pathparts <<< "$1"
+
+  for part in "${pathparts[@]}"; do
+    [[ $part ]] || continue
+    path+=/$part
+    add_dir "$path"
+  done
+} # }}}
+
+add_dir() {
+  # add a directory (without leading components)
+  #   $1: path on initcpio
+  #   $2: mode (optional, defaults to 755)
+
+  (( ! $# )) && return 1 # NOOP
+
+  local path=$1 mode=${2:-755}
+
+  __add_dir "$path" "$mode"
+}
+
+add_file() { # {{{
+  # add a regular file. no parsing done.
+  #   $1: source on disk
+  #   $2: destination on initcpio (optional: assumes same as source)
+
+  (( ! $# )) && return 1 # NOOP
+
+  # determine source and destination
+  local src=$basedir$1 dest=${2:-$1} mode=
+
+  if [[ ! -f $src ]]; then
+    err "$src: No such file"
+    return 1
+  fi
+
+  mode=$(stat -c %a "$src")
+  if [[ -z $mode ]]; then
+    err ""
+    return 1
+  fi
+
+  __add_file "$dest" "$src" "$mode"
+} # }}}
+
+add_symlink() {
+  # $1: name on initcpio
+  # $2: target of $1
+  __add_slink "$@"
+}
+
+add_path_to_file() { # {{{
+  [[ $1 ]] && add_dirpath "${1%/*}"
+} # }}}
+
+add_module() { # {{{
+  # comment goes hurrr
+
+  local -a firmware moddeps
+  local modpath= module= dep=
+
+  module=${1%.ko?(.gz)}
+
+  if [[ -z $basedir ]]; then # fast path =)
+    read -rd '' modpath < <(kmodinfo -n "$module" 2>/dev/null)
+  else # slow path =(
+    read -rd '' modpath < <(find "$basedir$moduledir" -name "$mod.ko" -o -name "$mod.ko.gz" -print0)
+  fi
+
+  [[ -z $modpath ]] && return 1
+
+  add_path_to_file "$modpath"
+  add_file "$modpath" || return 1
+
+  # grab firmware
+  IFS=',' read -rd '' -a firmware < <(kmodinfo -F firmware "$modpath")
+  for fw in "${firmware[@]}"; do
+    __add_file "$basedir/lib/firmware/$fw" "/lib/firmware/$fw"
+  done
+
+  # resolve deps, yo
+  IFS=',' read -rd '' -a moddeps < <(kmodinfo -F depends "$modpath")
+  for dep in "${moddeps[@]}"; do
+    add_module "$dep"
+  done
+
+  # add in any quirks
+  if [[ ${modquirks[$module]} ]]; then
+    add_module "${modquirks[$module]}"
+  fi
+
+  return 0
+} # }}}
+
+add_binary() { # {{{
+  # comment goes here
+  # this needs reworking to use $basedir
+
+  [[ -f $basedir$1 ]] || { err "$1 not found"; return 1; }
+
+  local -a sodeps
+  local sodep=
+
+  IFS=$'\n' read -rd '' -a sodeps < <(ldd "$basedir$1" |\
+      sed -n '2,$s#.\+=>[[:blank:]]\+\([^ ]\+\) (.\+#\1#p')
+
+  for sodep in "${sodeps[@]}"; do
+    [[ -e $sodep ]] || continue
+
+    add_dirpath "${sodep%/*}"
+
+    [[ -L $sodep ]] && { __add_slink "$(readlink -e "$sodep")" "$sodep"; continue; }
+    [[ -f $sodep ]] && { __add_file "$sodep" "$sodep"; continue; }
+  done
+
+  add_file "$basedir$1" "${2:-$1}"
+
+  # we always need the linker here
+  __add_slink $(readlink -e "$ld_so") "$ld_so"
+} # }}}
+
+add_device() { # {{{
+  # add a device node to cpio_filelist
+  #   $1: pathname on initcpio
+  #   $2: device type (b=block or c=character)
+  #   $3: device major
+  #   $4: device minor
+  #   $5: mode (optional, defaults to 644)
+
+  # nod <name> <mode> <uid> <gid> <dev_type> <maj> <min>
+  (( $# == 4 )) || (( $# == 5 )) || return 1
+  [[ $2 = [bc] ]] || return 1
+
+  qgrep "^nod $1 " "$cpio_filelist" && return 1
+  printf 'nod %s %s 0 0 %s %s %s\n' "$1" "${5:-644}" "${@:2:3}" >> "$cpio_filelist"
+} # }}}
+
+add_driver_classes() { # {{{
+  local -a mods
+  local mod
+
+  # find modules by class (e.g. drivers/ata)
+  pushd "$moduledir/kernel" &>/dev/null
+  while read -rd '' mod; do
+    mod=${mod##*/}
+    mods+=("${mod%.ko?(.gz)}")
+  done < <(find "$@" \( -name '*.ko' -o -name '*.ko.gz' \) -print0 2>/dev/null | sort -z)
+  popd &>/dev/null
+
+  # only add what autodetect found if we have a module cache
+  if [[ -s $autodetect_cache ]]; then
+    IFS=$'\n' read -rd '' -a mods < <(comm -12 <(printf '%s\n' "${mods[@]}" | sort) "$autodetect_cache")
+  fi
+
+  for mod in "${mods[@]}"; do
+    add_module "$mod"
+  done
+} # }}}
+

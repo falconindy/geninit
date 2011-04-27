@@ -1,0 +1,13 @@
+#!/bin/bash
+
+build() {
+  filesystems=("$basedir/lib/modules/$kernver"/kernel/fs/!(nls))
+  filesystems=("${filesystems[@]/#*\//fs/}")
+  add_driver_classes "${filesystems[@]}"
+}
+
+helpmsg() {
+  cat<<HELPEOF
+  This hook adds filesystems modules to the image.
+HELPEOF
+}

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+build() {
+  # user config
+  add_file /etc/udev/udev.conf
+
+  # needed binaries
+  add_binary /sbin/udevd
+  add_binary /sbin/udevadm
+
+  # udev tools
+  for tool in firmware ata_id path_id scsi_id usb_id; do
+      add_file /lib/udev/${tool}
+  done
+
+  # rules from udev package
+  for rules in 50-firmware.rules 50-udev-default.rules 60-persistent-storage.rules 80-drivers.rules; do
+      add_file /lib/udev/rules.d/${rules}
+  done
+
+  # there's much better ways to do module blacklisting
+  add_symlink /lib/udev/load-modules.sh /sbin/modprobe
+}
+
+helpmsg() {
+  cat <<EOF
+  This hook will use udev to create your root device node and detect the needed
+  modules for your root device. It is also required for firmware loading in
+  initramfs. It is recommended to use this hook.
+EOF
+}

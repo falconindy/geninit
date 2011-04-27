@@ -1,0 +1,300 @@
+#!/bin/bash
+
+shopt -s extglob
+
+declare -A modquirks
+
+_sysconfdir=/etc
+_sharedir=.
+
+# errors
+ENOENT=2
+EEXIST=17
+EINVAL=22
+
+## root dev/fs detection
+#read -r rootdevice rootfs < <(/bin/findmnt / -runo source,fstype)
+#
+## all fs modules
+#printf '%s\n' /lib/modules/$kver/kernel/fs/!(nls)/*.ko?(.gz)
+
+carch=$(uname -m)
+kernver=$(uname -r)
+
+# declared as an array to force expansion. would be great if arch had
+# symlink pointing to this from /lib/ld.so
+ld_so=( /lib/ld-linux-${carch//_/-}.so.?* )
+
+
+builderdir=${_sharedir}/builders
+baseconfig=${_sysconfdir}/geninit.conf
+
+err() {
+  printf 'error: %s\n' "$*"
+} >&2
+
+info() {
+  printf ':: %s\n' "$*"
+}
+
+verbose() {
+  (( verbose )) && info "$*"
+}
+
+die() {
+  err "$*"
+  cleanup 1
+}
+
+# -------------------------- #
+##  general util functions  ##
+# -------------------------- #
+
+in_array() {
+  local item needle=$1; shift
+  [[ -z $1 ]] && return 1 # Not Found
+
+  for item; do
+    [[ $item = $needle ]] && return 0 # Found
+  done
+  return 1 # Not Found
+}
+
+qgrep() {
+  2>/dev/null grep -q "$@"
+}
+
+kmodinfo() {
+  modinfo -0k $kernver "$@"
+}
+
+cleanup() {
+  rm -rf "$tmpdir"
+  exit $1
+}
+
+# ---------------------------------------- #
+## light wrappers for gen-init-cpio types ##
+##  - file, dir, nod, slink, pipe, sock   ##
+# ---------------------------------------- #
+
+__add_file() { # {{{
+  # add a file to cpio_filelist
+  #   $1: pathname on initcpio
+  #   $2: source on disk
+  #   $3: mode
+
+  # file <dest> <src> <mode> <uid> <gid> [<hard links>]
+
+  (( $# == 3 )) || return $EINVAL
+
+  qgrep "^file $1 " "$cpio_filelist" && return $EEXIST
+  printf 'file %s %s %s 0 0\n' "$@" >>"$cpio_filelist"
+} # }}}
+
+__add_dir() { # {{{
+  # add a directory to cpio_filelist (no knowledge of parents, use add_path instead)
+  #   $1: pathname on initcpio
+  #   $2: mode
+
+  # dir <name> <mode> <uid> <gid>
+
+  (( $# == 2 )) || [[ $1 == /?* ]] || return $EINVAL
+
+  local name=$1 mode=$2
+
+  qgrep "^dir $name " "$cpio_filelist" && return $EEXIST
+  printf 'dir %s %s 0 0\n' "$@" >>"$cpio_filelist"
+} # }}}
+
+__add_slink() { # {{{
+  # add a symlink to cpio_filelist
+  #   $1: name on initcpio
+  #   $2: target of $1
+
+  # slink <name> <target> <mode> <uid> <gid>
+
+  (( $# == 2 )) || return $EINVAL
+
+  local name=$1 target=$2
+
+  qgrep "^slink $name " "$cpio_filelist" && return $EEXIST
+  printf 'slink %s %s 777 0 0\n' "$name" "$target" >> "$cpio_filelist"
+} # }}}
+
+__add_pipe() { # {{{
+  # add a pipe to cpio_filelist
+  #   $1: pathname on initcpio
+  #   $2: mode
+
+  # pipe <name> <mode> <uid> <gid>
+
+  (( $# == 2 )) || return $EINVAL
+
+  local name=$1 mode=$2
+
+  qgrep "^pipe $name " "$cpio_filelist" && return $EEXIST
+  printf 'pipe %s %s 0 0\n' "$name" "$mode" >> "$cpio_filelist"
+} # }}}
+
+__add_sock() { # {{{
+  # add a socket to cpio_filelist
+  #   $1: pathname on initcpio
+  #   $2: mode
+
+  # sock <name> <mode> <uid> <gid>
+  local name=$1 mode=$2
+
+  qgrep "^sock $name " "$cpio_filelist" && return $EEXIST
+  printf 'sock %s %s 0 0\n' "$name" "$mode" >> "$cpio_filelist"
+} # }}}
+
+
+##### MAIN LOOP ###################################################
+#
+# The general flow of this should be something like:
+#   - source config file
+#       -- need to figure out naming conventions here
+#   - parse cmdline options
+#       -- do we want a full parser? or just a simple getopt
+#   - setup environment
+#       -- set paths in stone
+#   - loop through builders
+#   - add in extra modules
+#   - generate depmod files if necessary
+#   - create image!
+#
+
+# its a trap!
+trap 'cleanup 130' SIGINT
+trap 'cleanup 143' SIGTERM
+
+# source base config
+. $_sharedir/geninit.api
+
+# ------------------ #
+##  option parsing  ##
+# ------------------ #
+
+while getopts ':b:c:g:k:vz:' flag; do
+  case $flag in
+    b) basedir=$OPTARG ;;
+    c) config=$OPTARG ;;
+    g) imagename=$OPTARG ;;
+    k) kernver=$OPTARG ;;
+    v) verbose=1 ;;
+    z) ocompress=$OPTARG ;; # named differently to allow overriding
+    :) die "option requires an argument -- '$OPTARG'" ;;
+   \?) die "invalid option -- '$OPTARG'" ;;
+  esac
+done
+
+# ----------------- #
+##  sanity checks  ##
+# ----------------- #
+
+# how did our ld.so resolution go?
+if (( ${#ld_so[*]} != 1 )); then # uh oh...
+  die "failed to resolve the location of /lib/ld.so. Please report this bug."
+fi
+
+# make sure our config exists, and source it
+config=${config:-$baseconfig}
+[[ ! -f $config ]] && die "failed to find config file: \`$config'" || . "$config"
+
+# does the basedir exist? make sure it's properly formed
+# important! this ensures that our basedir is _always_ a path
+if [[ $basedir ]]; then
+  basedir=${basedir%/}
+  [[ -d $basedir ]] || die "basedir \`$basedir' not found"
+fi
+
+# does the kernel exist inside the basedir?
+[[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
+
+# is our supplied compression method (if supplied) valid?
+compress=${ocompress:-$compress}
+if [[ $compress ]]; then
+  [[ $compress = @(gzip|bzip2|lzma|xz) ]] || die "unknown compression method: $compress"
+  type -P "$compress" >/dev/null || die "failed to find \`$compress' binary in PATH"
+else
+  compress=cat  # NOOP compressor
+fi
+
+# can $imagename be resolved as a path?
+readlink -f "$imagename" >/dev/null || die "invalid path to imagename: $imagename"
+
+# ------------ #
+##  int main  ##
+# ------------ #
+
+# define a few paths for convenience
+tmpdir=$(mktemp -d /tmp/${0##*/}.XXXXXX)
+moduletmp=$tmpdir/modules
+cpio_filelist=$tmpdir/cpiofilelist.$$
+autodetect_cache=$tmpdir/autodetect.cache
+moduledir=/lib/modules/$kernver
+
+# parse builder array
+for builder in "${builders[@]}"; do
+  in_array "$builder" "${skipbuilders[@]}" && continue
+
+  if [[ ! -f $builderdir/$builder ]]; then
+    err "cannot find builder '$builder': No such file"
+    continue
+  fi
+
+  # subshell to prevent namespace pollution
+  . "$builderdir/$builder"
+  if ! type -t build >/dev/null; then
+    err "no build function found in builder '$builder'"
+    continue
+  fi
+
+  info "Building: [$builder]"
+  build
+done
+
+# generate depmod files
+info "Generating module dependencies"
+declare -i modcount=0
+
+while read line; do
+  if [[ $line =~ /lib/modules/[^[:space:]]+\.ko?(.gz) ]]; then
+    module=${BASH_REMATCH[0]}
+    command install -Dm644 "$basedir$module" "$tmpdir$module"
+    (( ++modcount ))
+  fi
+done < "$cpio_filelist"
+
+if (( modcount )); then
+  depmod -b "$tmpdir" "$kernver"
+  for file in modules.{dep,alias,symbols}; do
+    add_file "${tmpdir}${moduledir}/$file" "/lib/modules/$kernver/$file"
+  done
+fi
+
+if (( dryrun )); then
+  info "dry run ends here"
+  cleanup
+  exit 0
+fi
+
+if [[ $compress != cat ]]; then
+  zopts=('-9')
+  [[ $compress = xz ]] && zopts+=('--check=crc32')
+fi
+
+gen_init_cpio $cpio_filelist | "$compress" "${zopts[@]}" > "$imagename"
+pipesave=("${PIPE_STATUS[@]}") # save immediately
+
+(( pipesave[0] )) && die "failed to create initramfs image"
+(( pipesave[1] )) && die "error compressing initramfs image"
+info "Image creation completed successfully"
+
+# debag
+cat $cpio_filelist > foolist
+
+
+cleanup 0
+

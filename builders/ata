@@ -1,0 +1,16 @@
+#!/bin/bash
+
+build() {
+  add_driver_classes drivers/ata drivers/block
+
+  # quirks
+  add_module ahci
+  add_module sd_mod
+}
+
+helpmsg() {
+  cat<<EOF
+  This hook loads the necessary modules for an ata root device. It covers PATA
+  as well as SATA.
+EOF
+}
