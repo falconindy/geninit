@@ -1,0 +1,26 @@
+# an absolutely bare bones setup. no busybox, no udev. you MUST declare all
+# needed modules in your config's MODULES array.
+#
+#    You have no chance to survive make your time.
+#
+
+build() {
+  # base filesystem structure
+  for dir in proc sys dev {,s}bin usr{,/bin,/lib,/sbin} run new_root; do
+    add_dir /$dir
+  done
+
+  # necessary binaries
+  add_binary /lib/initcpio/dinit /init
+  add_binary /sbin/modprobe
+
+  add_file "$CONFIG" /config
+}
+
+help() {
+  cat <<HELPEOF
+  This hook sets up very little.
+HELPEOF
+}
+
+# vim: set et sw=2 ft=sh:

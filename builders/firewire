@@ -1,0 +1,16 @@
+# vim: set ft=sh:
+
+build() {
+  add_driver_classes drivers/firewire
+
+  add_module firewire-sbp2
+  add_module sd_mod
+  add_module sr_mod
+}
+
+helpmsg() {
+  cat<<HELPEOF
+  This hook loads the necessary modules for a firewire root device.
+HELPEOF
+}
+
