@@ -18,7 +18,7 @@
 #include <unistd.h>
 
 /* util-linux */
-#include <blkid.h>
+#include <blkid/blkid.h>
 
 #define msg(...) {if (!quiet) fprintf(stderr, ":: " __VA_ARGS__);}
 #define err(...) {fprintf(stderr, "error: " __VA_ARGS__);}
