@@ -1,11 +1,10 @@
 #!/bin/bash
 
 build() {
-  # this is cleaned up on exit
-
+  # generate a list of modules from aliases in /sys/devices
   find /sys/devices/ -name modalias -exec sort -u {} + | while read alias; do
-    modprobe --resolve-alias "$alias"
-  done >>"$autodetect_cache"
+    modprobe --set-version "$kernver" --resolve-alias "$alias"
+  done | sort -u >>"$autodetect_cache"
 
   if (( UID == 0 )) || [[ $(groups) = *disk* ]]; then
     if ! findmnt -sno fstype / >>"$autodetect_cache"; then
