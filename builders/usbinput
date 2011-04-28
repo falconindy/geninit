@@ -2,11 +2,6 @@
 
 build() {
   add_driver_classes drivers/usb/host drivers/hid/usbhid
-
-  # quirks
-  add_module ohci_hcd
-  add_module ehci_hcd
-  add_module xhci_hcd
 }
 
 helpmsg() {
