@@ -176,6 +176,8 @@ add_device() { # {{{
 
 use_hookscript() { # {{{
   # specifies that a builder should install a hookscript
+  # $builder comes from the builder parsing loop in main
+
   [[ $builder ]] || return 1
   add_file "$basedir$_sharedir/hooks/$builder" "/hooks/$builder"
 } # }}}
@@ -195,7 +197,7 @@ add_driver_classes() { # {{{
 
   # only add what autodetect found if we have a module cache
   if [[ -s $autodetect_cache ]]; then
-    IFS=$'\n' read -rd '' -a mods < <(grep -Ff <(printf '%s\n' "${mods[@]}") "$autodetect_cache")
+    IFS=$'\n' read -rd '' -a mods < <(grep -xf <(printf '%s\n' "${mods[@]}") "$autodetect_cache")
   fi
 
   for mod in "${mods[@]}"; do
