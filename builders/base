@@ -1,23 +1,11 @@
 #!/bin/bash
 
 build() {
-  # directory structure
+  # necessary directory structure
   add_dir /new_root
-
   add_dir /proc
   add_dir /sys
   add_dir /dev
-
-  add_dir /bin
-  add_dir /sbin
-
-  add_dir /lib
-  add_dir /lib/modules
-
-  add_dir /usr
-  add_dir /usr/bin
-  add_dir /usr/lib
-  add_dir /usr/sbin
 
   add_device /dev/null c 1 3
   add_device /dev/zero c 1 5
@@ -27,7 +15,6 @@ build() {
   add_binary /lib/initcpio/busybox /bin/busybox
   add_binary /sbin/modprobe
   add_binary /sbin/blkid
-
   add_binary "$_sharedir/init" "/init"
 
   # write a tasty config file that our init will enjoy
