@@ -191,12 +191,13 @@ fi
 
 # is our supplied compression method (if supplied) valid?
 compress=${ocompress:-$compress}
-if [[ $compress ]]; then
+if [[ -z $compress || $compress = none ]]; then
+  compress=cat  # NOOP compressor
+else
   [[ $compress = @(gzip|bzip2|lzma|xz) ]] || die "unknown compression method: $compress"
   type -P "$compress" >/dev/null || die "failed to find \`$compress' binary in PATH"
-else
-  compress=cat  # NOOP compressor
 fi
+
 
 # if $imagename is provided, its path needs to be valid
 if [[ $imagename ]]; then
