@@ -7,11 +7,21 @@ CPPFLAGS +=
 CFLAGS   += -std=c99 -Wall -pedantic -Wextra ${CPPFLAGS}
 LDFLAGS  := -lblkid ${LDFLAGS}
 
+DISTFILES := \
+	builders/ \
+	hooks/ \
+	geninit.conf \
+	geninit.api \
+	geninit \
+	init.c \
+	example.preset \
+	Makefile
+
 init: init.c
 	${CC} -c ${CFLAGS} ${CPPFLAGS} init.c
 	${CC} -o $@ ${LDFLAGS} init.o
 
-install: init strip
+install: strip
 	install -dm755 ${DESTDIR}${PREFIX}/share/geninit/builders
 	install -dm755 ${DESTDIR}${PREFIX}/share/geninit/hooks
 	install -dm755 ${DESTDIR}${PREFIX}/sbin
@@ -21,7 +31,7 @@ install: init strip
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit geninit.api
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit init
 	sed "s#^_sharedir=.*#_sharedir=${PREFIX}/share/geninit#" < geninit > ${DESTDIR}${PREFIX}/sbin/geninit
-	chmod +x ${DESTDIR}${PREFIX}/sbin/geninit
+	chmod 755 ${DESTDIR}${PREFIX}/sbin/geninit
 .PHONY: install
 
 strip: init
@@ -31,6 +41,13 @@ strip: init
 doc:
 	@echo "maybe i'll have some doc one day"
 .PHONY: doc
+
+dist:
+	mkdir geninit-${VERSION}
+	cp -r ${DISTFILES} geninit-${VERSION}
+	tar czf geninit-${VERSION}.tar.gz ${DISTFILES}
+	${RM} -r geninit-${VERSION}
+.PHONY:
 
 clean:
 	${RM} init.o init
