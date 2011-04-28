@@ -196,9 +196,8 @@ add_driver_classes() { # {{{
   popd &>/dev/null
 
   # only add what autodetect found if we have a module cache
-  if [[ -s $autodetect_cache ]]; then
-    IFS=$'\n' read -rd '' -a mods < <(grep -xf <(printf '%s\n' "${mods[@]}") "$autodetect_cache")
-  fi
+  [[ -s $autodetect_cache ]] &&
+    IFS=$'\n' read -rd '' -a mods < <(grep -xf <(printf '%s\n' "${mods[@]//-/_}") "$autodetect_cache")
 
   for mod in "${mods[@]}"; do
     add_module "$mod" && (( ++ret ))
