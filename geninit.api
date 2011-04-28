@@ -59,9 +59,11 @@ add_file() { # {{{
 
   mode=$(stat -c %a "$src")
   if [[ -z $mode ]]; then
-    err ""
+    err "failed to stat file: \`$src'"
     return 1
   fi
+
+  add_path_to_file "$dest"
 
   __add_file "$dest" "$src" "$mode"
 } # }}}
