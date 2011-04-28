@@ -198,8 +198,12 @@ else
   compress=cat  # NOOP compressor
 fi
 
-# can $imagename be resolved as a path?
-readlink -f "$imagename" >/dev/null || die "invalid path to imagename: $imagename"
+# if $imagename is provided, its path needs to be valid
+if [[ $imagename ]]; then
+  readlink -f "$imagename" >/dev/null || die "invalid path to imagename: $imagename"
+else # no $imagename, so we're doing a dry run
+  dryrun=1
+fi
 
 # ------------ #
 ##  int main  ##
@@ -262,9 +266,8 @@ if (( modcount )); then
 fi
 
 if (( dryrun )); then
-  info "dry run ends here"
-  cleanup
-  exit 0
+  info "Dry run complete. Use -g <path> to create an initramfs."
+  cleanup 0
 fi
 
 if [[ $compress != cat ]]; then
