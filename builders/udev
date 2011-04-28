@@ -10,12 +10,12 @@ build() {
 
   # udev tools
   for tool in firmware ata_id path_id scsi_id usb_id; do
-      add_file /lib/udev/${tool}
+      add_file "/lib/udev/$tool"
   done
 
   # rules from udev package
   for rules in 50-firmware.rules 50-udev-default.rules 60-persistent-storage.rules 80-drivers.rules; do
-      add_file /lib/udev/rules.d/${rules}
+      add_file "/lib/udev/rules.d/$rules"
   done
 
   # there's much better ways to do module blacklisting
