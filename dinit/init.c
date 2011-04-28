@@ -395,6 +395,10 @@ static void load_extra_modules(void) { /* {{{ */
 
   /* load modules from /config */
   fp = fopen("/config", "r");
+  if (!fp) {
+    return;
+  }
+
   while ((fgets(line, 1024, fp))) {
     if (strncmp(line, "%MODULES%", 9) == 0) {
       strtok(line, " \n"); /* ditch the fieldname */
@@ -423,8 +427,9 @@ static void load_extra_modules(void) { /* {{{ */
       free(argv);
       break;
     }
-    fclose(fp);
   }
+
+  fclose(fp);
 } /* }}} */
 
 static void trigger_udev_events(void) { /* {{{ */
@@ -648,6 +653,11 @@ static void kill_udev(pid_t pid) { /* {{{ */
 
   snprintf(path, PATH_MAX, "/proc/%d/exe", pid);
   exe = realpath(path, NULL);
+
+  /* there's no guarantee exe resolves */
+  if (!exe) {
+    return;
+  }
 
   if (strcmp(exe, UDEVD) == 0) {
     kill(pid, SIGTERM);
