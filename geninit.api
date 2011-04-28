@@ -129,15 +129,19 @@ add_binary() { # {{{
   [[ -f $basedir$1 ]] || { err "$1 not found"; return 1; }
 
   local -a sodeps
-  local sodep=
+  local binary=$basedir$1 sodep=
+
+  if ! "$ld_so" --verify "$binary"; then
+    # this isn't a binary!
+    add_file "$binary"
+    return $? # return with add_file's return val
+  fi
 
   IFS=$'\n' read -rd '' -a sodeps < <(ldd "$basedir$1" |\
       sed -n '2,$s#.\+=>[[:blank:]]\+\([^ ]\+\) (.\+#\1#p')
 
   for sodep in "${sodeps[@]}"; do
     [[ -e $sodep ]] || continue
-
-    add_dirpath "${sodep%/*}"
 
     if [[ -f $sodep ]]; then # but wait! a symlink is a regular file! FFFUUUUU
       if [[ ! -L $sodep ]]; then
