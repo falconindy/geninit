@@ -276,7 +276,7 @@ if [[ $compress != cat ]]; then
   [[ $compress = xz ]] && zopts+=('--check=crc32')
 fi
 
-info "Creating initramfs: $imagename"
+info "Creating initramfs: $imagename $([[ $compress = cat ]] || printf "[$compress]")"
 gen_init_cpio $cpio_filelist | "$compress" "${zopts[@]}" > "$imagename"
 pipesave=("${PIPESTATUS[@]}") # save immediately
 
