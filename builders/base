@@ -35,7 +35,7 @@ build() {
     printf ' %s' "${modules[@]}"
     printf '\n'
 
-    printf '%s' '%BUILDERS%'
+    printf '%s' '%HOOKS%'
     printf ' %s' "${builders[@]}"
     printf '\n'
   } > "$tmpdir/config"

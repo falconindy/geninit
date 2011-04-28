@@ -395,33 +395,36 @@ static void load_extra_modules(void) { /* {{{ */
 
   /* load modules from /config */
   fp = fopen("/config", "r");
-  if (fp) {
-    while (fgets(line, PATH_MAX, fp) != NULL) {
-      if (strncmp(line, "MODULES=", 8) == 0) {
-        argv = calloc(2, sizeof(argv));
-        *argv = "/sbin/modprobe";
-        *(argv + 1) = "-qa";
-        modcount = 2;
+  while ((fgets(line, 1024, fp))) {
+    if (strncmp(line, "%MODULES%", 9) == 0) {
+      strtok(line, " \n"); /* ditch the fieldname */
+      tok = strtok(NULL, " \n");
 
-        for (tok = strtok(&line[9], " \"\n"); tok; tok = strtok(NULL, " \"\n")) {
-          argv = realloc(argv, sizeof(argv) * ++modcount);
-          *(argv + (modcount - 1)) = tok;
-        }
-
-        /* make sure array wasn't empty */
-        if (modcount > 2) {
-          argv = realloc(argv, sizeof(argv) * ++modcount);
-          *(argv + (modcount - 1)) = NULL;
-          forkexecwait(argv);
-        }
-
-        free(argv);
-        break;
+      modcount = atoi(tok);
+      if (!modcount) {
+        continue;
       }
+
+      /* commands + number of modules + NULL */
+      argv = calloc(modcount + 3, sizeof argv);
+
+      *argv++ = "/sbin/modprobe";
+      *argv++ = "-qa";
+      while ((tok = strtok(NULL, " \n"))) {
+        *argv++ = tok;
+      }
+
+      /* rewind */
+      argv -= (modcount + 2);
+
+      /* run modprobe */
+      forkexecwait(argv);
+
+      free(argv);
+      break;
     }
     fclose(fp);
   }
-
 } /* }}} */
 
 static void trigger_udev_events(void) { /* {{{ */
@@ -480,24 +483,22 @@ static void run_hooks(void) { /* {{{ */
   }
 
   while (fgets(line, PATH_MAX, fp) != NULL) {
-    if (strncmp(line, "HOOKS=", 6) != 0) {
-      continue;
-    }
+    if (strncmp(line, "%HOOKS%", 7) == 0) {
+      strtok(line, " \n"); /* ditch the fieldname */
+      while ((hook = strtok(NULL, " \n"))) {
+        char path[PATH_MAX];
+        snprintf(path, PATH_MAX, "/hooks/%s", hook);
 
-    for (hook = strtok(&line[6], " \"\n"); hook; hook = strtok(NULL, " \"\n")) {
-      char path[PATH_MAX];
+        if (access(path, X_OK) != 0) {
+          continue;
+        }
 
-      snprintf(path, 4096, "hooks/%s", hook);
-
-      if (access(path, X_OK) != 0) {
-        continue;
+        char *argv[] = { path, path, NULL };
+        forkexecwait(argv);
       }
 
-      char *argv[] = { path, path, NULL };
-      forkexecwait(argv);
+      break;
     }
-
-    break;
   }
 
   fclose(fp);
