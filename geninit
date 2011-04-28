@@ -12,6 +12,7 @@ baseconfig=${_sysconfdir}/geninit.conf
 
 # error codes
 ENOENT=2
+EACCES=13
 EEXIST=17
 EINVAL=22
 
@@ -20,7 +21,11 @@ kernver=$(uname -r)
 
 # declared as an array to force expansion. would be great if arch had
 # symlink pointing to this from /lib/ld.so
-ld_so=( /lib/ld-linux-${carch//_/-}.so.?* )
+ld_so=(/lib/ld-linux-${carch//_/-}.so.?*)
+
+# Alter PATH. We want to make sure that /bin and /sbin are favored, since
+# we specifically rely on GNU coreutils
+PATH=/sbin:/bin:$PATH
 
 # -------------------------- #
 ##  general util functions  ##
@@ -65,6 +70,66 @@ cleanup() { # {{{
   rm -rf "$tmpdir"
   exit $1
 } # }}}
+
+build_preset() {
+  local preset= presetfile=$_sysconfdir/geninit.d/$1.preset
+  local -a presets
+
+  if [[ ! -f $basedir$presetfile ]]; then
+    err "preset not found: $1"
+    return $ENOENT
+  fi
+
+  if ! . "$basedir$presetfile"; then
+    err "failed to read preset: $1"
+    return $EACCES
+  fi
+
+  local var= cfg= opts= imagename=
+
+  # preset pulls in a known array 'presets'
+  for preset in "${presets[@]}"; do
+    # resolve kernel version
+    if [[ -z $ALL_kver ]]; then
+      err "No kernel version defined for preset \`$1'"
+      return $EINVAL
+    fi
+
+    # resolve image name
+    var=${preset}_image
+    if [[ -z ${!var} ]]; then
+      err "No imagename defined for preset \`$1'"
+      return $EINVAL
+    fi
+    imagename=${!var}
+
+    # extra config
+    var=${preset}_config
+    if [[ -z ${!var} ]]; then
+      # fallback on $ALL_config if its available
+      cfg=${ALL_config:-$_sysconfigdir/geninit.conf}
+    else
+      cfg=${!var}
+    fi
+
+    # extra options are optional
+    var=${preset}_options
+    opts=${!var}
+
+    # this should always resolve to something (i hope)
+    if [[ ! -f $basedir$cfg ]]; then
+      err "preset config file not found: \`$basedir$cfg'"
+      return $ENOENT
+    fi
+
+    # we've got enough to relaunch geninit now
+    # TODO: don't relaunch. Do this the sane way.
+    info "Building image from preset: $1-$preset"
+    printf '  ==> %s\n' "-k $ALL_kver -c $cfg -g $basedir$imagename $opts"
+    "$0" -b "$basedir" -k "$ALL_kver" -c "$cfg" -g "$basedir$imagename" $opts || return 1
+    echo
+  done
+}
 
 # ---------------------------------------- #
 ## light wrappers for gen-init-cpio types ##
@@ -153,12 +218,14 @@ trap 'cleanup 143' SIGTERM
 ##  option parsing  ##
 # ------------------ #
 
-while getopts ':b:c:g:k:vz:' flag; do
+while getopts ':b:c:g:k:p:S:vz:' flag; do
   case $flag in
     b) basedir=$OPTARG ;;
     c) config=$OPTARG ;;
     g) imagename=$OPTARG ;;
     k) kernver=$OPTARG ;;
+    p) preset=$OPTARG ;;
+    S) skipbuilders=(${OPTARG//,/ }) ;;
     v) verbose=1 ;;
     z) ocompress=$OPTARG ;; # named differently to allow overriding
     :) die "option requires an argument -- '$OPTARG'" ;;
@@ -217,6 +284,11 @@ moduletmp=$tmpdir/modules
 cpio_filelist=$tmpdir/cpiofilelist.$$
 autodetect_cache=$tmpdir/autodetect.cache
 moduledir=/lib/modules/$kernver
+
+if [[ $preset ]]; then
+  build_preset "$preset"
+  cleanup
+fi
 
 # parse builder array
 for builder in "${builders[@]}"; do
@@ -278,7 +350,7 @@ if [[ $compress != cat ]]; then
   [[ $compress = xz ]] && zopts+=('--check=crc32')
 fi
 
-info "Creating initramfs: $imagename $([[ $compress = cat ]] || printf "[$compress]")"
+info "Creating$([[ $compress = cat ]] || printf " $compress") initramfs: $imagename"
 gen_init_cpio $cpio_filelist | "$compress" "${zopts[@]}" > "$imagename"
 pipesave=("${PIPESTATUS[@]}") # save immediately
 
