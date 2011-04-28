@@ -1,6 +1,7 @@
 #!/bin/bash
 
 build() {
+  # directory structure
   add_dir /new_root
 
   add_dir /proc
@@ -23,11 +24,11 @@ build() {
   add_device /dev/console c 5 1
   add_device /dev/mem c 1 1
 
-  add_binary /lib/initcpio/busybox
+  add_binary /lib/initcpio/busybox /bin/busybox
   add_binary /sbin/modprobe
   add_binary /sbin/blkid
 
-  add_binary "${_sharedir}/init" "/init"
+  add_binary "$_sharedir/init" "/init"
 
   # write a tasty config file that our init will enjoy
   {
@@ -40,7 +41,7 @@ build() {
     printf '\n'
   } > "$tmpdir/config"
 
-  add_file "$tmpdir/config" "/config"
+  add_file "$tmpdir/config" /config
 
   add_file /etc/modprobe.d/usb-load-ehci-first.conf
 }
@@ -51,3 +52,4 @@ helpmsg() {
   skip this unless you know exactly what you are doing.
 EOF
 }
+
