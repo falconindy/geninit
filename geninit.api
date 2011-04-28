@@ -95,12 +95,11 @@ add_module() { # {{{
   if [[ -z $basedir ]]; then # fast path =)
     read -rd '' modpath < <(kmodinfo -n "$module" 2>/dev/null)
   else # slow path =(
-    read -rd '' modpath < <(find "$basedir$moduledir" -name "$mod.ko" -o -name "$mod.ko.gz" -print0)
+    read -rd '' modpath < <(find "$basedir$moduledir/kernel" -type f -name "$mod.ko" -o -name "$mod.ko.gz" -print0)
   fi
 
   [[ -z $modpath ]] && return 1
 
-  add_path_to_file "$modpath"
   add_file "$modpath" || return 1
 
   # grab firmware
@@ -192,7 +191,7 @@ add_driver_classes() { # {{{
   while read -rd '' mod; do
     mod=${mod##*/}
     mods+=("${mod%.ko?(.gz)}")
-  done < <(find "$@" \( -name '*.ko' -o -name '*.ko.gz' \) -print0 2>/dev/null | sort -z)
+  done < <(find "$@" -type f \( -name '*.ko' -o -name '*.ko.gz' \) -print0 2>/dev/null)
   popd &>/dev/null
 
   # only add what autodetect found if we have a module cache
