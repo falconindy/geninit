@@ -1,0 +1,17 @@
+#
+# example preset file for geninit
+#
+# - presets can be disabled by prefixing with !
+# - each preset must have, at minimum, an image name defined
+# - extra options and config parameters are optional
+#
+
+presets=(default failsafe)
+ALL_kver=2.6.38-ARCH
+ALL_config=/etc/geninit.conf
+
+default_image=/boot/initramfs-ARCH
+
+failsafe_image=/boot/initramfs-ARCH-failsafe
+failsafe_options="-S autodetect"
+failsafe_config=/etc/geninit.conf
