@@ -12,12 +12,6 @@ ENOENT=2
 EEXIST=17
 EINVAL=22
 
-## root dev/fs detection
-#read -r rootdevice rootfs < <(/bin/findmnt / -runo source,fstype)
-#
-## all fs modules
-#printf '%s\n' /lib/modules/$kver/kernel/fs/!(nls)/*.ko?(.gz)
-
 carch=$(uname -m)
 kernver=$(uname -r)
 
@@ -291,10 +285,6 @@ pipesave=("${PIPE_STATUS[@]}") # save immediately
 (( pipesave[0] )) && die "failed to create initramfs image"
 (( pipesave[1] )) && die "error compressing initramfs image"
 info "Image creation completed successfully"
-
-# debag
-cat $cpio_filelist > foolist
-
 
 cleanup 0
 
