@@ -4,10 +4,13 @@ shopt -s extglob
 
 declare -A modquirks
 
+# vital paths
 _sysconfdir=/etc
 _sharedir=.
+builderdir=${_sharedir}/builders
+baseconfig=${_sysconfdir}/geninit.conf
 
-# errors
+# error codes
 ENOENT=2
 EEXIST=17
 EINVAL=22
@@ -19,32 +22,28 @@ kernver=$(uname -r)
 # symlink pointing to this from /lib/ld.so
 ld_so=( /lib/ld-linux-${carch//_/-}.so.?* )
 
-
-builderdir=${_sharedir}/builders
-baseconfig=${_sysconfdir}/geninit.conf
-
-err() {
-  printf 'error: %s\n' "$*"
-} >&2
-
-info() {
-  printf ':: %s\n' "$*"
-}
-
-verbose() {
-  (( verbose )) && info "$*"
-}
-
-die() {
-  err "$*"
-  cleanup 1
-}
-
 # -------------------------- #
 ##  general util functions  ##
 # -------------------------- #
 
-in_array() {
+err() { # {{{
+  printf 'error: %s\n' "$*"
+} >&2 # }}}
+
+info() { # {{{
+  printf ':: %s\n' "$*"
+} # }}}
+
+verbose() { # {{{
+  (( verbose )) && info "$*"
+} # }}}
+
+die() { # {{{
+  err "$*"
+  cleanup 1
+} # }}}
+
+in_array() { # {{{
   local item needle=$1; shift
   [[ -z $1 ]] && return 1 # Not Found
 
@@ -52,20 +51,20 @@ in_array() {
     [[ $item = $needle ]] && return 0 # Found
   done
   return 1 # Not Found
-}
+} # }}}
 
-qgrep() {
+qgrep() { # {{{
   2>/dev/null grep -q "$@"
-}
+} # }}}
 
-kmodinfo() {
+kmodinfo() { # {{{
   modinfo -0k $kernver "$@"
-}
+} # }}}
 
-cleanup() {
+cleanup() { # {{{
   rm -rf "$tmpdir"
   exit $1
-}
+} # }}}
 
 # ---------------------------------------- #
 ## light wrappers for gen-init-cpio types ##
@@ -143,28 +142,12 @@ __add_sock() { # {{{
   printf 'sock %s %s 0 0\n' "$name" "$mode" >> "$cpio_filelist"
 } # }}}
 
-
-##### MAIN LOOP ###################################################
-#
-# The general flow of this should be something like:
-#   - source config file
-#       -- need to figure out naming conventions here
-#   - parse cmdline options
-#       -- do we want a full parser? or just a simple getopt
-#   - setup environment
-#       -- set paths in stone
-#   - loop through builders
-#   - add in extra modules
-#   - generate depmod files if necessary
-#   - create image!
-#
-
 # its a trap!
 trap 'cleanup 130' SIGINT
 trap 'cleanup 143' SIGTERM
 
 # source base config
-. $_sharedir/geninit.api
+. "$_sharedir/geninit.api"
 
 # ------------------ #
 ##  option parsing  ##
