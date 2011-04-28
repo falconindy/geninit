@@ -198,10 +198,11 @@ else
   type -P "$compress" >/dev/null || die "failed to find \`$compress' binary in PATH"
 fi
 
-
 # if $imagename is provided, its path needs to be valid
 if [[ $imagename ]]; then
-  readlink -f "$imagename" >/dev/null || die "invalid path to imagename: $imagename"
+  imagepath=$(readlink -f "$imagename")
+  [[ $imagepath ]] || die "invalid path to imagename: $imagename"
+  [[ -w ${imagepath%/*} ]] || die "no permission to write to specified path: \`${imagepath%/*}'"
 else # no $imagename, so we're doing a dry run
   dryrun=1
 fi
@@ -255,7 +256,7 @@ declare -i modcount=0
 while read line; do
   if [[ $line =~ /lib/modules/[^[:space:]]+\.ko?(.gz) ]]; then
     module=${BASH_REMATCH[0]}
-    command install -Dm644 "$basedir$module" "$tmpdir$module"
+    install -Dm644 "$basedir$module" "$tmpdir$module"
     (( ++modcount ))
   fi
 done < "$cpio_filelist"
