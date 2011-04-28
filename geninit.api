@@ -66,11 +66,14 @@ add_file() { # {{{
   __add_file "$dest" "$src" "$mode"
 } # }}}
 
-add_symlink() {
+add_symlink() { # {{{
   # $1: name on initcpio
   # $2: target of $1
+
+  (( $# != 2 )) || return $EINVAL
+
   __add_slink "$@"
-}
+} # }}}
 
 add_path_to_file() { # {{{
   [[ $1 ]] && add_dirpath "${1%/*}"
@@ -132,14 +135,22 @@ add_binary() { # {{{
 
     add_dirpath "${sodep%/*}"
 
-    [[ -L $sodep ]] && { __add_slink "$(readlink -e "$sodep")" "$sodep"; continue; }
-    [[ -f $sodep ]] && { __add_file "$sodep" "$sodep"; continue; }
+    if [[ -f $sodep ]]; then # but wait! a symlink is a regular file! FFFUUUUU
+      if [[ ! -L $sodep ]]; then
+        add_file "$sodep"
+      else
+        __add_slink "$sodep" "$(readlink -e "$sodep")"
+        add_file "$(readlink -e "$sodep")"
+      fi
+    fi
   done
 
+  # the binary itself
   add_file "$basedir$1" "${2:-$1}"
 
-  # we always need the linker here
-  __add_slink $(readlink -e "$ld_so") "$ld_so"
+  # we always need the big bad linker
+  __add_slink "$ld_so" $(readlink -e "$ld_so")
+  add_file "$(readlink -e "$ld_so")"
 } # }}}
 
 add_device() { # {{{
