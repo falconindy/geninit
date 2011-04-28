@@ -27,7 +27,7 @@ build() {
   add_binary /sbin/modprobe
   add_binary /sbin/blkid
 
-  add_binary "${_sharedir}/dinit/init" "/init"
+  add_binary "${_sharedir}/init" "/init"
 
   # write a tasty config file that our init will enjoy
   {
