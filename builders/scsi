@@ -1,18 +1,11 @@
 #!/bin/bash
 
 build() {
-  declare checked=(scsi block fusion)
-  local driverpath=$moduledir/kernel/drivers
-
-  pushd "$driverpath" &>/dev/null
-  IFS=$'\n' read -rd '' -a modules < \
-    <(find "${checked[@]}" \( -name "*.ko" -o -name "*.ko.gz" \) 2>/dev/null)
-  popd &>/dev/null
-
+  add_driver_classes drivers/scsi drivers/block drivers/fusion
 }
 
 helpmsg() {
-  cat<<HELPEOF
+  cat<<EOF
   This hook loads the necessary modules for an scsi root device.
-HELPEOF
+EOF
 }

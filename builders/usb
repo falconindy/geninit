@@ -1,23 +1,17 @@
-# vim: set ft=sh:
+#!/bin/bash
 
 build() {
-    MODULES=" $(checked_modules "/usb/host" | grep -ve "_cs" -e "sl811-hcd" -e "isp116x-hcd")"
-
-    MODULES=$(echo ${MODULES}) #trim whitespace
-    if [ -n "${MODULES}" ]; then
-        MODULES="${MODULES} usb_storage sd_mod sr_mod"
-        MODULES="${MODULES} $(checked_modules "drivers/usb/storage/ums-*")"
-    fi
-    BINARIES=""
-    FILES=""
-    SCRIPT=""
+  add_driver_classes drivers/usb/host
+  if (( ! $? )); then
+    add_module usb_storage
+    add_module sd_mod
+    add_module sr_mod
+    add_driver_classes drivers/usb/storage
+  fi
 }
 
-help ()
-{
-cat<<HELPEOF
+helpmsg() {
+  cat<<EOF
   This hook loads the necessary modules for an usb root device.
-  Detection will take place at runtime. To minimize the modules
-  in the image, add the autodetect hook too.
-HELPEOF
+EOF
 }

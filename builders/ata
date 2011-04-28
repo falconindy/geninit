@@ -3,9 +3,9 @@
 build() {
   add_driver_classes drivers/ata drivers/block
 
-  # quirks
-  add_module ahci
-  add_module sd_mod
+  if (( ! $? )); then
+    add_module sd_mod
+  fi
 }
 
 helpmsg() {
