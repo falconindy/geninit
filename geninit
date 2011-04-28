@@ -232,6 +232,16 @@ for builder in "${builders[@]}"; do
   build
 done
 
+# add extra modules from config
+for mod in ${modules[@]}; do
+  add_module "$mod"
+done
+
+# add extra files from config
+for file in "${files[@]}"; do
+  add_file "$file"
+done
+
 # generate depmod files
 info "Generating module dependencies"
 declare -i modcount=0
