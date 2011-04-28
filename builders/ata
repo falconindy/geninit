@@ -1,11 +1,7 @@
 #!/bin/bash
 
 build() {
-  add_driver_classes drivers/ata drivers/block
-
-  if (( ! $? )); then
-    add_module sd_mod
-  fi
+  add_driver_classes drivers/ata drivers/block && add_module sd_mod
 }
 
 helpmsg() {

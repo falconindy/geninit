@@ -1,10 +1,8 @@
 #!/bin/bash
 
 build() {
-  add_driver_classes drivers/scsi drivers/block drivers/message/fusion
-  if (( ! $? )); then
+  add_driver_classes drivers/scsi drivers/block drivers/message/fusion &&
     add_module sd_mod
-  fi
 }
 
 helpmsg() {
