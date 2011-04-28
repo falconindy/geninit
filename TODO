@@ -1,0 +1,5 @@
+* Add module quirks (e.g. nls codepages for FAT, crc32 for btrfs)
+* Add presets
+* support lvm2, mdadm, and crypt
+* support NFS?
+
