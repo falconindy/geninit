@@ -23,7 +23,7 @@ build() {
   add_device /dev/console c 5 1
   add_device /dev/mem c 1 1
 
-  add_binary /bin/busybox
+  add_binary /lib/initcpio/busybox
   add_binary /sbin/modprobe
   add_binary /sbin/blkid
 
