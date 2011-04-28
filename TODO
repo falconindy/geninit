@@ -3,4 +3,6 @@
 * support lvm2, mdadm, and crypt
 * support NFS?
 * verify support for basedir
+* add better error output
+* add verbose output
 
