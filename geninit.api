@@ -11,9 +11,8 @@
 
 shopt -s extglob
 
-
 add_dirpath() { # {{{
-  # add all elements of a path to cpio_filelist
+  # add all elements of a path (equivalent of mkdir -p)
   #   $1: an absolute path
 
   [[ $1 == /?* ]] || return 1 # must be an absolute path, but not root itself
@@ -30,9 +29,9 @@ add_dirpath() { # {{{
   done
 } # }}}
 
-add_dir() {
-  # add a directory (without leading components)
-  #   $1: path on initcpio
+add_dir() { # {{{
+  # add a directory (equivalent of mkdir *without* -p)
+  #   $1: absolute path on initcpio
   #   $2: mode (optional, defaults to 755)
 
   (( ! $# )) && return 1 # NOOP
@@ -40,7 +39,7 @@ add_dir() {
   local path=$1 mode=${2:-755}
 
   __add_dir "$path" "$mode"
-}
+} # }}}
 
 add_file() { # {{{
   # add a regular file. no parsing done.
@@ -69,20 +68,24 @@ add_file() { # {{{
 } # }}}
 
 add_symlink() { # {{{
-  # $1: name on initcpio
-  # $2: target of $1
+  # add a symlink
+  #   $1: name on initcpio
+  #   $2: target of $1
 
-  (( $# != 2 )) || return $EINVAL
+  (( $# != 2 )) || return 1
 
   __add_slink "$@"
 } # }}}
 
 add_path_to_file() { # {{{
+  # add the path leading up to a file
+  #   $1: filename with full path
   [[ $1 ]] && add_dirpath "${1%/*}"
 } # }}}
 
 add_module() { # {{{
-  # comment goes hurrr
+  # add a kernel module. deps are resolved recursively and added
+  #   $1: kernel module by name (no path, with or without extension)
 
   local -a firmware moddeps
   local modpath= module= dep=
@@ -106,7 +109,7 @@ add_module() { # {{{
     __add_file "$basedir/lib/firmware/$fw" "/lib/firmware/$fw"
   done
 
-  # resolve deps, yo
+  # resolve deps
   IFS=',' read -rd '' -a moddeps < <(kmodinfo -F depends "$modpath")
   for dep in "${moddeps[@]}"; do
     add_module "$dep"
@@ -173,7 +176,7 @@ add_device() { # {{{
 
 add_driver_classes() { # {{{
   local -a mods
-  local mod
+  local mod=
 
   # find modules by class (e.g. drivers/ata)
   pushd "$moduledir/kernel" &>/dev/null
