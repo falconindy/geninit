@@ -20,10 +20,6 @@ build() {
   else
     err "User does not have proper permissions to read superblocks, raid and filesystem modules are not detected"
   fi
-
-  # re-sort/uniq the cache
-  sort -u "$autodetect_cache" >"$autodetect_cache.tmp"
-  mv "$autodetect_cache"{.tmp,}
 }
 
 helpmsg() {
