@@ -32,7 +32,6 @@ declare -i savefilelist=0
 declare basedir=
 declare config=
 declare imagename=
-declare kernver=
 declare preset=
 declare skipbuilders=
 declare ocompress=
