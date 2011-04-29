@@ -4,18 +4,11 @@ shopt -s extglob
 
 declare -A modquirks
 
-# vital paths
+# tender vittles
 _sysconfdir=/etc
 _sharedir=.
 builderdir=${_sharedir}/builders
 baseconfig=${_sysconfdir}/geninit.conf
-
-# error codes
-ENOENT=2
-EACCES=13
-EEXIST=17
-EINVAL=22
-
 carch=$(uname -m)
 kernver=$(uname -r)
 
@@ -26,6 +19,24 @@ ld_so=(/lib/ld-linux-${carch//_/-}.so.?*)
 # Alter PATH. We want to make sure that /bin and /sbin are favored, since
 # we specifically rely on GNU coreutils
 PATH=/sbin:/bin:$PATH
+
+# error codes
+ENOENT=2
+EACCES=13
+EEXIST=17
+EINVAL=22
+
+# globals
+declare -i automods=0
+declare -i savefilelist=0
+declare basedir=
+declare config=
+declare imagename=
+declare kernver=
+declare preset=
+declare skipbuilders=
+declare ocompress=
+declare dryrun=
 
 # -------------------------- #
 ##  general util functions  ##
@@ -214,6 +225,15 @@ __build_image() { # {{{
     done
   fi
 
+  if (( savefilelist )); then
+    imagename=${imagename:-image} # set during a dry-run
+    if cp "$cpio_filelist" "/tmp/${imagename##*/}.filelist"; then
+      info "image filelist saved to /tmp/${imagename##*/}.filelist"
+    else
+      err "failed to save filelist to /tmp" # should never happen
+    fi
+  fi
+
   if (( dryrun )); then
     info "Dry run complete. Use -g <path> to create an initramfs."
     cleanup 0
@@ -309,7 +329,7 @@ trap 'cleanup 143' SIGTERM
 ##  option parsing  ##
 # ------------------ #
 
-while getopts ':b:c:g:hk:Mp:S:z:' flag; do
+while getopts ':b:c:g:hk:Mp:S:sz:' flag; do
   case $flag in
     b) basedir=$OPTARG ;;
     c) config=$OPTARG ;;
@@ -319,6 +339,7 @@ while getopts ':b:c:g:hk:Mp:S:z:' flag; do
     M) automods=1 ;;
     p) preset=$OPTARG ;;
     S) skipbuilders=(${OPTARG//,/ }) ;;
+    s) savefilelist=1 ;;
     z) ocompress=$OPTARG ;; # named differently to allow overriding
     :) die "option requires an argument -- '$OPTARG'" ;;
    \?) die "invalid option -- '$OPTARG'" ;;
