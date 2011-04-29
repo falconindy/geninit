@@ -2,9 +2,9 @@
 
 build() {
   # generate a list of modules from aliases in /sys/devices
-  find /sys/devices/ -name modalias -exec sort -u {} + | while read alias; do
-    modprobe --set-version "$kernver" --resolve-alias "$alias"
-  done | sort -u >>"$autodetect_cache"
+  find /sys/devices/ -name modalias -exec sort -u {} + |\
+    xargs -I {} modprobe --set-version "$kernver" --resolve-alias {} |\
+    sort -u >>"$autodetect_cache"
 
   if (( UID == 0 )) || [[ $(groups) = *disk* ]]; then
     if ! findmnt -sno fstype / >>"$autodetect_cache"; then
@@ -19,6 +19,7 @@ build() {
   else
     err "User does not have proper permissions to read superblocks, raid and filesystem modules are not detected"
   fi
+
 }
 
 helpmsg() {
