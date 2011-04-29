@@ -115,9 +115,9 @@ add_module() { # {{{
   done
 
   # add in any quirks
-  if [[ ${modquirks[$module]} ]]; then
-    add_module "${modquirks[$module]}"
-  fi
+  for mod in ${modquirks[$module]}; do
+    add_module "$mod"
+  done
 
   return 0
 } # }}}

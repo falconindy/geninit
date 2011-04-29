@@ -12,6 +12,7 @@ DISTFILES := \
 	hooks/ \
 	geninit.conf \
 	geninit.api \
+	geninit.quirks \
 	geninit \
 	init.c \
 	example.preset \

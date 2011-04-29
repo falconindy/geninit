@@ -1,0 +1,8 @@
+#!/bin/bash
+
+declare -A modquirks
+
+modquirks['fat']="nls_cp437"
+modquirks['ocfs2']="configfs"
+modquirks['libcrc32c']="crc32c crc32c_intel"
+

@@ -160,16 +160,15 @@ __build_image() { # {{{
       continue
     fi
 
-    ( # subshell to prevent namespace pollution
-      . "$builderdir/$builder"
-      if ! type -t build >/dev/null; then
-        err "no build function found in builder '$builder'"
-        continue
-      fi
+    # subshell to prevent namespace pollution
+    . "$builderdir/$builder"
+    if ! type -t build >/dev/null; then
+      err "no build function found in builder '$builder'"
+      continue
+    fi
 
-      info "Building: [$builder]"
-      build
-    )
+    info "Processing buildstep: [$builder]"
+    build
   done
 
   # add extra modules from config
@@ -286,6 +285,9 @@ trap 'cleanup 143' SIGTERM
 
 # source public API
 . "$_sharedir/geninit.api"
+
+# source module quirks file
+. "$_sharedir/geninit.quirks"
 
 # ------------------ #
 ##  option parsing  ##
