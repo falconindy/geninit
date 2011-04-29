@@ -337,8 +337,7 @@ fi
 config=${config:-$baseconfig}
 [[ ! -f $config ]] && die "failed to find config file: \`$config'" || . "$config"
 
-# does the basedir exist? make sure it's properly formed
-# important! this ensures that our basedir is _always_ a path
+# if specified, does the basedir exist? trim any trailing slash
 if [[ $basedir ]]; then
   basedir=${basedir%/}
   [[ -d $basedir ]] || die "basedir \`$basedir' not found"
