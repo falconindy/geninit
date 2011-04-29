@@ -18,6 +18,10 @@ build() {
   add_binary /sbin/blkid
   add_binary "$_sharedir/init" "/init"
 
+
+  # XXX: this requires private API to sidestep conflicts with $basedir.
+  #      move it into geninit, instead so we can safely use __add_file.
+
   # write a tasty config file that our init will enjoy
   {
     printf '%s %d' '%MODULES%' "${#modules[*]}"
@@ -28,8 +32,7 @@ build() {
     printf ' %s' "${builders[@]}"
     printf '\n'
   } > "$tmpdir/config"
-
-  add_file "$tmpdir/config" /config
+  __add_file /config "$tmpdir/config" 0644
 
   add_file /etc/modprobe.d/usb-load-ehci-first.conf
 }
