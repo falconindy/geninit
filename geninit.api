@@ -31,20 +31,21 @@ add_file() { # {{{
   (( $# )) || return 1 # NOOP
 
   # determine source and destination
-  local src=$basedir$1 dest=${2:-$1} mode=
+  local src= dest=${2:-$1} mode=
 
-  if [[ ! -f $src ]]; then
-    err "$src: No such file"
-    return 1
+  if [[ ${1:0:1} == @ ]]; then # assert an absolute path
+    src=${1:1}
+  else
+    src=$basedir$1
   fi
+
+  [[ -f $src ]] || { err "$src: No such file"; return 1; }
 
   mode=$(stat -c %a "$src")
   if [[ -z $mode ]]; then
     err "failed to stat file: \`$src'"
     return 1
   fi
-
-  #add_path_to_file "$dest"
 
   __add_file "${dest#$basedir}" "$src" "$mode"
 } # }}}
@@ -114,14 +115,22 @@ add_module() { # {{{
 add_binary() { # {{{
   # add a binary file with .so depends
   #   $1: path to binary
+  #   $2: destination on initcpio (optional: assumes same as source)
 
   (( $# )) || return 1
 
-  [[ -f $basedir$1 ]] || { err "$1 not found"; return 1; }
-
   local -a sodeps
-  local binary=$basedir$1 mode= sodep= resolved= dirname=
+  local binary= dest= mode= sodep= resolved= dirname=
 
+  if [[ ${1:0:1} == @ ]]; then # assert an absolute path
+    binary=${1:1}
+  else
+    binary=$basedir$1
+  fi
+
+  [[ -f $binary ]] || { err "$binary not found"; return 1; }
+
+  dest=${2:-$binary}
   mode=$(stat -c %a "$binary")
 
   if ! "$ld_so" --verify "$binary"; then
@@ -130,7 +139,7 @@ add_binary() { # {{{
     return $? # return with add_file's return val
   fi
 
-  IFS=$'\n' read -rd '' -a sodeps < <(ldd "$basedir$1" |\
+  IFS=$'\n' read -rd '' -a sodeps < <(ldd "$binary" |\
       sed -n '2,$s#.\+=>[[:blank:]]\+\([^ ]\+\) (.\+#\1#p')
 
   for sodep in "${sodeps[@]}"; do
@@ -145,13 +154,13 @@ add_binary() { # {{{
         dirname=${resolved%/*}
         __add_dir "${dirname#$basedir}" 755
         __add_slink "$sodep" "${resolved#$basedir}"
-        __add_file "$resolved" "$resolved" 755
+        __add_file "${resolved#$basedir}" "$resolved" 755
       fi
     fi
   done
 
   # the binary itself
-  __add_file "${1#$basedir}" "$1" 755
+  __add_file "${dest#$basedir}" "${binary#$basedir}" 755
 
   # we always need the big bad linker
   __add_slink "$ld_so" "$(readlink -e "$ld_so")"
