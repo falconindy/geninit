@@ -242,6 +242,7 @@ static void mount_setup(void) { /* {{{ */
     mknod("/dev/console", S_IFCHR|0600, makedev(5, 1));
     mknod("/dev/null", S_IFCHR|0666, makedev(1, 3));
     mknod("/dev/zero", S_IFCHR|0666, makedev(1, 5));
+    mknod("/dev/mem", S_IFCHR|0640, makedev(1, 1));
   }
 } /* }}} */
 
