@@ -10,10 +10,6 @@ baseconfig=${_sysconfdir}/geninit.conf
 carch=$(uname -m)
 kernver=$(uname -r)
 
-# declared as an array to force expansion. would be great if arch had
-# symlink pointing to this from /lib/ld.so
-ld_so=(/lib/ld-linux-${carch//_/-}.so.?*)
-
 # Alter PATH. We want to make sure that /bin and /sbin are favored, since
 # we specifically rely on GNU coreutils
 PATH=/sbin:/bin:$PATH
@@ -329,7 +325,9 @@ done
 ##  sanity checks  ##
 # ----------------- #
 
-# how did our ld.so resolution go?
+# declared as an array to force expansion. would be great if arch had
+# symlink pointing to this from /lib/ld.so
+ld_so=($basedir/lib/ld-linux-${carch//_/-}.so.?*)
 if (( ${#ld_so[*]} != 1 )); then # uh oh...
   die "failed to resolve the location of /lib/ld.so. Please report this bug."
 fi
