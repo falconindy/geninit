@@ -1,5 +1,4 @@
 * support NFS?
-* verify support lvm2, mdadm, and crypt
-* verify support for basedir
+* verify support lvm2 and crypt
 * enhance output: better error output, color!
 
