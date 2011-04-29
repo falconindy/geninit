@@ -155,6 +155,14 @@ __build_image() { # {{{
   declare -a zopts pipesave
   declare builder= module= line= mod= file=
 
+  # this must be resolved to an absolute path
+  if [[ ${imagename:0:1} != / ]]; then
+    imagename=$(readlink -f "$imagename")
+  fi
+
+  # make sure readlink didn't fail
+  [[ $imagename ]] || die "Failed to resolve path to imagename"
+
   # parse builder array
   for builder in "${builders[@]}"; do
     in_array "$builder" "${skipbuilders[@]}" && continue
@@ -185,11 +193,11 @@ __build_image() { # {{{
     add_file "$file"
   done
 
-  info "Generating module dependencies"
-  depmod -b "$buildroot" "$kernver"
-
-  # this must be resolved to an absolute path
-  imagename=$(readlink -f "$imagename")
+  # only create depmod files if there's modules added
+  if [[ -d $buildroot$moduledir ]]; then
+    info "Generating module dependencies"
+    depmod -b "$buildroot" "$kernver"
+  fi
 
   if (( dryrun )); then
     info "Dry run complete. Use -g <path> to create an initramfs."
