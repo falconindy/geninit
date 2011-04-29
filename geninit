@@ -309,13 +309,14 @@ trap 'cleanup 143' SIGTERM
 ##  option parsing  ##
 # ------------------ #
 
-while getopts ':b:c:g:hk:p:S:z:' flag; do
+while getopts ':b:c:g:hk:Mp:S:z:' flag; do
   case $flag in
     b) basedir=$OPTARG ;;
     c) config=$OPTARG ;;
     g) imagename=$OPTARG ;;
     h) usage ;;
     k) kernver=$OPTARG ;;
+    M) automods=1 ;;
     p) preset=$OPTARG ;;
     S) skipbuilders=(${OPTARG//,/ }) ;;
     z) ocompress=$OPTARG ;; # named differently to allow overriding
@@ -374,6 +375,14 @@ moduletmp=$tmpdir/modules
 cpio_filelist=$tmpdir/cpiofilelist.$$
 autodetect_cache=$tmpdir/autodetect.cache
 moduledir=/lib/modules/$kernver
+
+if (( automods )); then
+  . "$_sharedir/builders/autodetect" || die "unable to source autodetect builder"
+  build
+  info "Autodetected modules"
+  [[ -s $autodetect_cache ]] && cat "$autodetect_cache"
+  cleanup 0
+fi
 
 if [[ $preset ]]; then
   __build_preset "$preset"
