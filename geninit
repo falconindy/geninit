@@ -71,6 +71,26 @@ cleanup() { # {{{
   exit $1
 } # }}}
 
+usage() { # {{{
+  cat<<USAGE
+geninit
+Usage: geninit [options]
+
+  Options:
+   -b <path>      Use base directory (default: /)
+   -c <file>      Specify a different config file (default: $_sysconfdir/geninit.conf)
+   -g <path>      Path and name of generated image (dry-run if unspecified)
+   -h             Display this help message
+   -k <kver>      Specify a different kernel version (default: $(uname -r))
+   -p <preset>    Build using a preset file
+   -S <names>     Skip the specified builders during the build process
+   -v             Output more
+   -z <method>    Override compression method
+
+USAGE
+  exit
+} # }}}
+
 # --------------- #
 ##  private API  ##
 # --------------- #
@@ -293,11 +313,12 @@ trap 'cleanup 143' SIGTERM
 ##  option parsing  ##
 # ------------------ #
 
-while getopts ':b:c:g:k:p:S:vz:' flag; do
+while getopts ':b:c:g:hk:p:S:vz:' flag; do
   case $flag in
     b) basedir=$OPTARG ;;
     c) config=$OPTARG ;;
     g) imagename=$OPTARG ;;
+    h) usage ;;
     k) kernver=$OPTARG ;;
     p) preset=$OPTARG ;;
     S) skipbuilders=(${OPTARG//,/ }) ;;
