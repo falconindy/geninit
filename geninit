@@ -149,9 +149,9 @@ __add_pipe() { # {{{
 } # }}}
 
 __build_image() { # {{{
-  declare -i modcount=0
-  declare -a zopts pipesave
-  declare builder= module= line= mod= file=
+  local -i modcount=0
+  local -a zopts pipesave
+  local builder= module= line= mod= file=
 
   # this must be resolved to an absolute path
   if [[ ${imagename:0:1} != / ]]; then
@@ -236,9 +236,9 @@ __build_image() { # {{{
 } # }}}
 
 __build_preset() { # {{{
-  declare preset= presetfile=$_sysconfdir/geninit.d/$1.preset
-  declare var= cfg= opts= imagename=
-  declare -a presets
+  local preset= presetfile=$_sysconfdir/geninit.d/$1.preset
+  local var= cfg= opts= imagename=
+  local -a presets
 
   if [[ ! -f $basedir$presetfile ]]; then
     err "preset not found: $1"
