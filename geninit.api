@@ -74,6 +74,7 @@ add_symlink() { # {{{
 
   (( $# != 2 )) || return 1
 
+  add_path_to_file "$1"
   __add_slink "$@"
 } # }}}
 
@@ -147,7 +148,7 @@ add_binary() { # {{{
       if [[ ! -L $sodep ]]; then
         add_file "$sodep"
       else
-        __add_slink "$sodep" "$(readlink -e "$sodep")"
+        add_symlink "$sodep" "$(readlink -e "$sodep")"
         add_file "$(readlink -e "$sodep")"
       fi
     fi
