@@ -373,10 +373,10 @@ if (( automods )); then
   cleanup 0
 fi
 
-(( dryrun )) && info "Starting dry run"
 if [[ $preset ]]; then
   __build_preset "$preset"
 else
+  (( dryrun )) && info "Starting dry run"
   __build_image
 fi
 
