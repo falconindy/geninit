@@ -105,7 +105,7 @@ add_module() { # {{{
   # grab firmware
   IFS=',' read -rd '' -a firmware < <(kmodinfo -F firmware "$modpath")
   for fw in "${firmware[@]}"; do
-    __add_file "$basedir/lib/firmware/$fw" "/lib/firmware/$fw"
+    add_file "/lib/firmware/$fw"
   done
 
   # resolve deps
