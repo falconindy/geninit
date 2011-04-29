@@ -28,7 +28,7 @@ add_file() { # {{{
   #   $1: source on disk
   #   $2: destination on initcpio (optional: assumes same as source)
 
-  (( ! $# )) && return 1 # NOOP
+  (( $# )) || return 1 # NOOP
 
   # determine source and destination
   local src=$basedir$1 dest=${2:-$1} mode=
@@ -54,7 +54,7 @@ add_symlink() { # {{{
   #   $1: name on initcpio
   #   $2: target of $1
 
-  (( $# != 2 )) || return 1
+  (( $# == 2 )) || return 1
 
   add_path_to_file "$1"
   __add_slink "$@"
@@ -63,12 +63,17 @@ add_symlink() { # {{{
 add_path_to_file() { # {{{
   # add the path leading up to a file
   #   $1: filename with full path
-  [[ $1 ]] && add_dir "${1%/*}"
+
+  (( $# )) || return 1
+
+  add_dir "${1%/*}"
 } # }}}
 
 add_module() { # {{{
-  # add a kernel module. deps are resolved recursively and added
+  # add a kernel module with dependencies
   #   $1: kernel module by name (no path, with or without extension)
+
+  (( $# )) || return 1
 
   local -a firmware moddeps
   local modpath= module= dep=
@@ -106,8 +111,10 @@ add_module() { # {{{
 } # }}}
 
 add_binary() { # {{{
-  # comment goes here
-  # this needs reworking to use $basedir
+  # add a binary file with .so depends
+  #   $1: path to binary
+
+  (( $# )) || return 1
 
   [[ -f $basedir$1 ]] || { err "$1 not found"; return 1; }
 
@@ -146,20 +153,28 @@ add_binary() { # {{{
   add_file "$(readlink -e "$ld_so")"
 } # }}}
 
-add_pipe() {
-  # IOU: one pipe adding function
-  :
-}
+add_pipe() { # {{{
+  # add a fifo
+  #   $1: path of pipe
+  #   $2: mode (optional, defaults to 644)
+
+  (( $# )) || return 1
+
+  __add_pipe "$1" "${2:-644}"
+} # }}}
 
 use_hookscript() { # {{{
   # specifies that a builder should install a hookscript
-  # $builder comes from the builder parsing loop in main
+  # "$builder" comes from the builder parsing loop in main
 
   [[ $builder ]] || return 1
   add_file "$basedir$_sharedir/hooks/$builder" "/hooks/$builder"
 } # }}}
 
 add_driver_classes() { # {{{
+  # add a class of drivers, as a dir relative to /lib/modules/$kernver/kernel
+  #   $@: directories
+
   local -a mods
   local -i ret=0
   local mod=
