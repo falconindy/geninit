@@ -192,11 +192,11 @@ __build_image() { # {{{
   done
 
   # only create depmod files if there's modules added
-  if [[ -d $buildroot/lib/modules/$kernver ]]; then
+  if [[ -d $buildroot$moduledir ]]; then
     info "Generating module dependencies"
     depmod -b "$buildroot" "$kernver"
     # trim excess depmod files
-    rm "$buildroot/lib/modules/$kernver"/modules.!(dep|alias|symbols)
+    rm "$buildroot$moduledir"/modules.!(dep|alias|symbols)
   fi
 
   if (( dryrun )); then
