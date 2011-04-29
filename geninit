@@ -71,70 +71,9 @@ cleanup() { # {{{
   exit $1
 } # }}}
 
-build_preset() {
-  local preset= presetfile=$_sysconfdir/geninit.d/$1.preset
-  local -a presets
-
-  if [[ ! -f $basedir$presetfile ]]; then
-    err "preset not found: $1"
-    return $ENOENT
-  fi
-
-  if ! . "$basedir$presetfile"; then
-    err "failed to read preset: $1"
-    return $EACCES
-  fi
-
-  local var= cfg= opts= imagename=
-
-  # preset pulls in a known array 'presets'
-  for preset in "${presets[@]}"; do
-    # resolve kernel version
-    if [[ -z $ALL_kver ]]; then
-      err "No kernel version defined for preset \`$1'"
-      return $EINVAL
-    fi
-
-    # resolve image name
-    var=${preset}_image
-    if [[ -z ${!var} ]]; then
-      err "No imagename defined for preset \`$1'"
-      return $EINVAL
-    fi
-    imagename=${!var}
-
-    # extra config
-    var=${preset}_config
-    if [[ -z ${!var} ]]; then
-      # fallback on $ALL_config if its available
-      cfg=${ALL_config:-$_sysconfigdir/geninit.conf}
-    else
-      cfg=${!var}
-    fi
-
-    # extra options are optional
-    var=${preset}_options
-    opts=${!var}
-
-    # this should always resolve to something (i hope)
-    if [[ ! -f $basedir$cfg ]]; then
-      err "preset config file not found: \`$basedir$cfg'"
-      return $ENOENT
-    fi
-
-    # we've got enough to relaunch geninit now
-    # TODO: don't relaunch. Do this the sane way.
-    info "Building image from preset: $1-$preset"
-    printf '  ==> %s\n' "-k $ALL_kver -c $cfg -g $basedir$imagename $opts"
-    "$0" -b "$basedir" -k "$ALL_kver" -c "$cfg" -g "$basedir$imagename" $opts || return 1
-    echo
-  done
-}
-
-# ---------------------------------------- #
-## light wrappers for gen-init-cpio types ##
-##  - file, dir, nod, slink, pipe, sock   ##
-# ---------------------------------------- #
+# --------------- #
+##  private API  ##
+# --------------- #
 
 __add_file() { # {{{
   # add a file to cpio_filelist
@@ -207,11 +146,71 @@ __add_sock() { # {{{
   printf 'sock %s %s 0 0\n' "$name" "$mode" >> "$cpio_filelist"
 } # }}}
 
+__build_preset() { # {{{
+  local preset= presetfile=$_sysconfdir/geninit.d/$1.preset
+  local -a presets
+
+  if [[ ! -f $basedir$presetfile ]]; then
+    err "preset not found: $1"
+    return $ENOENT
+  fi
+
+  if ! . "$basedir$presetfile"; then
+    err "failed to read preset: $1"
+    return $EACCES
+  fi
+
+  local var= cfg= opts= imagename=
+
+  # preset pulls in a known array 'presets'
+  for preset in "${presets[@]}"; do
+    # resolve kernel version
+    if [[ -z $ALL_kver ]]; then
+      err "No kernel version defined for preset \`$1'"
+      return $EINVAL
+    fi
+
+    # resolve image name
+    var=${preset}_image
+    if [[ -z ${!var} ]]; then
+      err "No imagename defined for preset \`$1'"
+      return $EINVAL
+    fi
+    imagename=${!var}
+
+    # extra config
+    var=${preset}_config
+    if [[ -z ${!var} ]]; then
+      # fallback on $ALL_config if its available
+      cfg=${ALL_config:-$_sysconfigdir/geninit.conf}
+    else
+      cfg=${!var}
+    fi
+
+    # extra options are optional
+    var=${preset}_options
+    opts=${!var}
+
+    # this should always resolve to something (i hope)
+    if [[ ! -f $basedir$cfg ]]; then
+      err "preset config file not found: \`$basedir$cfg'"
+      return $ENOENT
+    fi
+
+    # we've got enough to relaunch geninit now
+    # TODO: don't relaunch. Do this the sane way.
+    info "Building image from preset: $1-$preset"
+    printf '  ==> %s\n' "-k $ALL_kver -c $cfg -g $basedir$imagename $opts"
+    "$0" -b "$basedir" -k "$ALL_kver" -c "$cfg" -g "$basedir$imagename" $opts || return 1
+    echo
+  done
+} # }}}
+
 # its a trap!
 trap 'cleanup 130' SIGINT
 trap 'cleanup 143' SIGTERM
 
-# source base config
+# source public API
 . "$_sharedir/geninit.api"
 
 # ------------------ #
@@ -286,7 +285,7 @@ autodetect_cache=$tmpdir/autodetect.cache
 moduledir=/lib/modules/$kernver
 
 if [[ $preset ]]; then
-  build_preset "$preset"
+  __build_preset "$preset"
   cleanup
 fi
 
