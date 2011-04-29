@@ -1,7 +1,5 @@
-* Add module quirks (e.g. nls codepages for FAT, crc32 for btrfs)
-* support lvm2, mdadm, and crypt
 * support NFS?
+* verify support lvm2, mdadm, and crypt
 * verify support for basedir
-* add better error output
-* add verbose output
+* enhance output: better error output, verbose output (do we really want this), color!
 
