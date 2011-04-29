@@ -2,8 +2,6 @@
 
 shopt -s extglob
 
-declare -A modquirks
-
 # tender vittles
 _sysconfdir=/etc
 _sharedir=.
