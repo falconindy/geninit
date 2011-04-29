@@ -199,6 +199,17 @@ __build_image() { # {{{
     rm "$buildroot$moduledir"/modules.!(dep|alias|symbols)
   fi
 
+  # create delicious config
+  {
+    printf '%s %d' '%MODULES%' "${#modules[*]}"
+    printf ' %s' "${modules[@]}"
+    printf '\n'
+
+    printf '%s' '%HOOKS%'
+    printf ' %s' "${builders[@]}"
+    printf '\n'
+  } > "$buildroot/config"
+
   if (( dryrun )); then
     info "Dry run complete. Use -g <path> to create an initramfs."
     return
