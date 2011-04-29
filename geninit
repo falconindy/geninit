@@ -225,8 +225,9 @@ __build_image() { # {{{
 } # }}}
 
 __build_preset() { # {{{
-  local preset= presetfile=$_sysconfdir/geninit.d/$1.preset
-  local -a presets
+  declare preset= presetfile=$_sysconfdir/geninit.d/$1.preset
+  declare var= cfg= opts= imagename=
+  declare -a presets
 
   if [[ ! -f $basedir$presetfile ]]; then
     err "preset not found: $1"
@@ -237,8 +238,6 @@ __build_preset() { # {{{
     err "failed to read preset: $1"
     return $EACCES
   fi
-
-  local var= cfg= opts= imagename=
 
   # preset pulls in a known array 'presets'
   for preset in "${presets[@]}"; do
