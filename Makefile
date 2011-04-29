@@ -22,11 +22,12 @@ init: init.c
 	${CC} -c ${CFLAGS} ${CPPFLAGS} init.c
 	${CC} -o $@ ${LDFLAGS} init.o
 
-install: strip
+install: init
 	install -dm755 ${DESTDIR}${PREFIX}/share/geninit/builders
 	install -dm755 ${DESTDIR}${PREFIX}/share/geninit/hooks
 	install -dm755 ${DESTDIR}${PREFIX}/sbin
 	install -Dm644 geninit.conf ${DESTDIR}/etc/geninit.conf
+	install -Dm644 example.preset ${DESTDIR}/etc/geninit.d/example.preset
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit/hooks hooks/*
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit/builders builders/*
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit geninit.api
