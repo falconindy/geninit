@@ -146,6 +146,80 @@ __add_sock() { # {{{
   printf 'sock %s %s 0 0\n' "$name" "$mode" >> "$cpio_filelist"
 } # }}}
 
+__build_image() { # {{{
+  declare -i modcount=0
+  declare -a zopts pipesave
+  declare builder= module= line= mod= file=
+
+  # parse builder array
+  for builder in "${builders[@]}"; do
+    in_array "$builder" "${skipbuilders[@]}" && continue
+
+    if [[ ! -f $builderdir/$builder ]]; then
+      err "cannot find builder '$builder': No such file"
+      continue
+    fi
+
+    ( # subshell to prevent namespace pollution
+      . "$builderdir/$builder"
+      if ! type -t build >/dev/null; then
+        err "no build function found in builder '$builder'"
+        continue
+      fi
+
+      info "Building: [$builder]"
+      build
+    )
+  done
+
+  # add extra modules from config
+  for mod in ${modules[@]}; do
+    add_module "$mod"
+  done
+
+  # add extra files from config
+  for file in "${files[@]}"; do
+    add_file "$file"
+  done
+
+  # generate depmod files
+  info "Generating module dependencies"
+  while read line; do
+    if [[ $line =~ /lib/modules/[^[:space:]]+\.ko?(.gz) ]]; then
+      module=${BASH_REMATCH[0]}
+      install -Dm644 "$basedir$module" "$tmpdir$module"
+      (( ++modcount ))
+    fi
+  done < "$cpio_filelist"
+
+  if (( modcount )); then
+    depmod -b "$tmpdir" "$kernver"
+    for file in modules.{dep,alias,symbols}; do
+      add_file "${tmpdir}${moduledir}/$file" "/lib/modules/$kernver/$file"
+    done
+  fi
+
+  if (( dryrun )); then
+    info "Dry run complete. Use -g <path> to create an initramfs."
+    cleanup 0
+  fi
+
+  if [[ $compress != cat ]]; then
+    zopts=('-9')
+    [[ $compress = xz ]] && zopts+=('--check=crc32')
+  fi
+
+  info "Creating$([[ $compress = cat ]] || printf " $compress") initramfs: $imagename"
+  gen_init_cpio $cpio_filelist | "$compress" "${zopts[@]}" > "$imagename"
+  pipesave=("${PIPESTATUS[@]}") # save immediately
+
+  (( pipesave[0] )) && die "failed to create initramfs image"
+  (( pipesave[1] )) && die "error compressing initramfs image"
+  info "Image creation completed successfully"
+
+  return $(( !!(pipesave[0] + pipesave[1]) ))
+} # }}}
+
 __build_preset() { # {{{
   local preset= presetfile=$_sysconfdir/geninit.d/$1.preset
   local -a presets
@@ -286,76 +360,9 @@ moduledir=/lib/modules/$kernver
 
 if [[ $preset ]]; then
   __build_preset "$preset"
-  cleanup
+else
+  __build_image
 fi
 
-# parse builder array
-for builder in "${builders[@]}"; do
-  in_array "$builder" "${skipbuilders[@]}" && continue
-
-  if [[ ! -f $builderdir/$builder ]]; then
-    err "cannot find builder '$builder': No such file"
-    continue
-  fi
-
-  ( # subshell to prevent namespace pollution
-    . "$builderdir/$builder"
-    if ! type -t build >/dev/null; then
-      err "no build function found in builder '$builder'"
-      continue
-    fi
-
-    info "Building: [$builder]"
-    build
-  )
-done
-
-# add extra modules from config
-for mod in ${modules[@]}; do
-  add_module "$mod"
-done
-
-# add extra files from config
-for file in "${files[@]}"; do
-  add_file "$file"
-done
-
-# generate depmod files
-info "Generating module dependencies"
-declare -i modcount=0
-
-while read line; do
-  if [[ $line =~ /lib/modules/[^[:space:]]+\.ko?(.gz) ]]; then
-    module=${BASH_REMATCH[0]}
-    install -Dm644 "$basedir$module" "$tmpdir$module"
-    (( ++modcount ))
-  fi
-done < "$cpio_filelist"
-
-if (( modcount )); then
-  depmod -b "$tmpdir" "$kernver"
-  for file in modules.{dep,alias,symbols}; do
-    add_file "${tmpdir}${moduledir}/$file" "/lib/modules/$kernver/$file"
-  done
-fi
-
-if (( dryrun )); then
-  info "Dry run complete. Use -g <path> to create an initramfs."
-  cleanup 0
-fi
-
-if [[ $compress != cat ]]; then
-  zopts=('-9')
-  [[ $compress = xz ]] && zopts+=('--check=crc32')
-fi
-
-info "Creating$([[ $compress = cat ]] || printf " $compress") initramfs: $imagename"
-gen_init_cpio $cpio_filelist | "$compress" "${zopts[@]}" > "$imagename"
-pipesave=("${PIPESTATUS[@]}") # save immediately
-
-(( pipesave[0] )) && die "failed to create initramfs image"
-(( pipesave[1] )) && die "error compressing initramfs image"
-info "Image creation completed successfully"
-
-cleanup 0
+cleanup $?
 
