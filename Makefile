@@ -30,7 +30,7 @@ install: init
 	install -Dm644 example.preset ${DESTDIR}/etc/geninit.d/example.preset
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit/hooks hooks/*
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit/builders builders/*
-	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit geninit.api
+	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit geninit.api geninit.quirks
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit init
 	sed "s#^_sharedir=.*#_sharedir=${PREFIX}/share/geninit#" < geninit > ${DESTDIR}${PREFIX}/sbin/geninit
 	chmod 755 ${DESTDIR}${PREFIX}/sbin/geninit
