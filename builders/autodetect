@@ -1,13 +1,18 @@
 #!/bin/bash
 
 build() {
+  if [[ ! -d /sys/devices ]]; then
+    err "/sys does not appear to be mounted. Unable to use autodetection"
+    return 1
+  fi
+
   # generate a list of modules from aliases in /sys/devices
   find /sys/devices/ -name modalias -exec sort -u {} + |\
-    xargs -I {} modprobe --set-version "$kernver" --resolve-alias {} |\
+    xargs -I {} modprobe -d "${basedir:-/}" --set-version "$kernver" --resolve-alias {} |\
     sort -u >>"$autodetect_cache"
 
   if (( UID == 0 )) || [[ $(groups) = *disk* ]]; then
-    if ! findmnt -sno fstype / >>"$autodetect_cache"; then
+    if ! findmnt -uno fstype / >>"$autodetect_cache"; then
       err "failed to detect root filesystem"
     fi
 
