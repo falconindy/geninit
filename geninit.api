@@ -11,26 +11,8 @@
 
 shopt -s extglob
 
-add_dirpath() { # {{{
-  # add all elements of a path (equivalent of mkdir -p)
-  #   $1: an absolute path
-
-  [[ $1 == /?* ]] || return 1 # must be an absolute path, but not root itself
-
-  local path=
-  local -a pieces
-
-  IFS='/' read -ra pathparts <<< "$1"
-
-  for part in "${pathparts[@]}"; do
-    [[ $part ]] || continue
-    path+=/$part
-    add_dir "$path"
-  done
-} # }}}
-
 add_dir() { # {{{
-  # add a directory (equivalent of mkdir *without* -p)
+  # add a directory (with parents)
   #   $1: absolute path on initcpio
   #   $2: mode (optional, defaults to 755)
 
@@ -62,7 +44,7 @@ add_file() { # {{{
     return 1
   fi
 
-  add_path_to_file "$dest"
+  #add_path_to_file "$dest"
 
   __add_file "$dest" "$src" "$mode"
 } # }}}
@@ -81,7 +63,7 @@ add_symlink() { # {{{
 add_path_to_file() { # {{{
   # add the path leading up to a file
   #   $1: filename with full path
-  [[ $1 ]] && add_dirpath "${1%/*}"
+  [[ $1 ]] && add_dir "${1%/*}"
 } # }}}
 
 add_module() { # {{{
@@ -130,7 +112,7 @@ add_binary() { # {{{
   [[ -f $basedir$1 ]] || { err "$1 not found"; return 1; }
 
   local -a sodeps
-  local binary=$basedir$1 sodep=
+  local binary=$basedir$1 sodep= resolved=
 
   if ! "$ld_so" --verify "$binary"; then
     # this isn't a binary!
@@ -148,8 +130,10 @@ add_binary() { # {{{
       if [[ ! -L $sodep ]]; then
         add_file "$sodep"
       else
-        add_symlink "$sodep" "$(readlink -e "$sodep")"
-        add_file "$(readlink -e "$sodep")"
+        resolved="$(readlink -e "$sodep")"
+        __add_dir "${resolved%/*}" 755
+        __add_slink "$sodep" "$resolved"
+        add_file "$resolved"
       fi
     fi
   done
@@ -162,21 +146,10 @@ add_binary() { # {{{
   add_file "$(readlink -e "$ld_so")"
 } # }}}
 
-add_device() { # {{{
-  # add a device node to cpio_filelist
-  #   $1: pathname on initcpio
-  #   $2: device type (b=block or c=character)
-  #   $3: device major
-  #   $4: device minor
-  #   $5: mode (optional, defaults to 644)
-
-  # nod <name> <mode> <uid> <gid> <dev_type> <maj> <min>
-  (( $# == 4 )) || (( $# == 5 )) || return 1
-  [[ $2 = [bc] ]] || return 1
-
-  qgrep "^nod $1 " "$cpio_filelist" && return 1
-  printf 'nod %s %s 0 0 %s %s %s\n' "$1" "${5:-644}" "${@:2:3}" >> "$cpio_filelist"
-} # }}}
+add_pipe() {
+  # IOU: one pipe adding function
+  :
+}
 
 use_hookscript() { # {{{
   # specifies that a builder should install a hookscript
