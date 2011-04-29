@@ -39,10 +39,6 @@ info() { # {{{
   printf ':: %s\n' "$*"
 } # }}}
 
-verbose() { # {{{
-  (( verbose )) && info "$*"
-} # }}}
-
 die() { # {{{
   err "$*"
   cleanup 1
@@ -313,7 +309,7 @@ trap 'cleanup 143' SIGTERM
 ##  option parsing  ##
 # ------------------ #
 
-while getopts ':b:c:g:hk:p:S:vz:' flag; do
+while getopts ':b:c:g:hk:p:S:z:' flag; do
   case $flag in
     b) basedir=$OPTARG ;;
     c) config=$OPTARG ;;
@@ -322,7 +318,6 @@ while getopts ':b:c:g:hk:p:S:vz:' flag; do
     k) kernver=$OPTARG ;;
     p) preset=$OPTARG ;;
     S) skipbuilders=(${OPTARG//,/ }) ;;
-    v) verbose=1 ;;
     z) ocompress=$OPTARG ;; # named differently to allow overriding
     :) die "option requires an argument -- '$OPTARG'" ;;
    \?) die "invalid option -- '$OPTARG'" ;;
