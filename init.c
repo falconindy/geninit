@@ -669,7 +669,8 @@ static int set_init(void) { /* {{{ */
 } /* }}} */
 
 static void kill_udev(pid_t pid) { /* {{{ */
-  static char *argv[] = { UDEVADM, "control", "--stop-exec-queue", NULL };
+  static char *info_argv[] = { UDEVADM, "info", "--cleanup-db", NULL };
+  static char *control_argv[] = { UDEVADM, "control", "--exit", NULL };
   char path[PATH_MAX];
   char *exe;
 
@@ -677,27 +678,9 @@ static void kill_udev(pid_t pid) { /* {{{ */
     return;
   }
 
-  /* pause event queue to facilitate shutdown */
-  forkexecwait(argv);
+  forkexecwait(info_argv);
+  forkexecwait(control_argv);
 
-  snprintf(path, PATH_MAX, "/proc/%d/exe", pid);
-  exe = realpath(path, NULL);
-
-  /* there's no guarantee exe resolves */
-  if (!exe) {
-    return;
-  }
-
-  if (strcmp(exe, UDEVD) == 0) {
-    kill(pid, SIGTERM);
-  }
-
-  /* bitch, please */
-  if (access(exe, F_OK) == 0) {
-    kill(pid, SIGKILL);
-  }
-
-  free(exe);
 } /*}}}*/
 
 static int switch_root(char *argv[]) { /* {{{ */
