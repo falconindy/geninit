@@ -19,7 +19,7 @@ build() {
   done
 
   # there's much better ways to do module blacklisting
-  add_symlink /lib/udev/load-modules.sh /sbin/modprobe
+  add_symlink /sbin/modprobe /lib/udev/load-modules.sh
 }
 
 helpmsg() {

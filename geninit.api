@@ -52,13 +52,13 @@ add_file() { # {{{
 
 add_symlink() { # {{{
   # add a symlink
-  #   $1: name on initcpio
-  #   $2: target of $1
+  #   $1: target of $2
+  #   $2: name on initcpio
 
   (( $# == 2 )) || return 1
 
   add_path_to_file "$1"
-  __add_slink "$@"
+  __add_slink "$2" "$1"
 } # }}}
 
 add_path_to_file() { # {{{
