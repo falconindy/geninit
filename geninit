@@ -179,12 +179,12 @@ __build_image() { # {{{
 
   # add extra modules from config
   for mod in ${modules[@]}; do
-    add_module "$mod"
+    add_module "$mod" || err "Module not found: $mod"
   done
 
   # add extra files from config
   for file in "${files[@]}"; do
-    add_file "$file"
+    add_file "$file" || err "File not found: $file"
   done
 
   # only create depmod files if there's modules added
@@ -195,8 +195,7 @@ __build_image() { # {{{
     rm "$buildroot$moduledir"/modules.!(dep|alias|symbols)
   fi
 
-  # create delicious config
-  {
+  { # create delicious config
     printf '%s %d' '%MODULES%' "${#modules[*]}"
     printf ' %s' "${modules[@]}"
     printf '\n'
