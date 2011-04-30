@@ -1,0 +1,15 @@
+#!/bin/bash
+
+build() {
+  add_driver_classes drivers/md
+
+  add_binary "/sbin/mdadm"
+  add_file "/lib/udev/rules.d/64-md-raid.rules"
+}
+
+helpmsg() {
+  cat<<EOF
+  This hook loads the necessary modules for an mdadm root device. Arrays are
+  assembled at runtime via udev.
+EOF
+}
