@@ -162,8 +162,8 @@ static void delete_contents(char *path, dev_t rootdev) { /* {{{ */
 } /* }}} */
 
 static void start_rescue_shell(void) { /* {{{ */
-  char *bboxinstall[] = { BUSYBOX, "--install", NULL };
-  char *bboxlaunch[] = { BUSYBOX, "ash", NULL };
+  static char *bboxinstall[] = { BUSYBOX, "--install", NULL };
+  static char *bboxlaunch[] = { BUSYBOX, "ash", NULL };
 
   if (access(BUSYBOX, X_OK) != 0) {
     return;
@@ -344,7 +344,7 @@ static void disable_modules(void) { /* {{{ */
 } /* }}} */
 
 static pid_t launch_udev(void) { /* {{{ */
-  char *argv[] = { UDEVD, "--resolve-names=never", NULL };
+  static char *argv[] = { UDEVD, "--resolve-names=never", NULL };
   pid_t pid;
 
   if (access(UDEVD, X_OK) != 0) {
@@ -444,8 +444,8 @@ static void load_extra_modules(void) { /* {{{ */
 } /* }}} */
 
 static void trigger_udev_events(void) { /* {{{ */
-  char *trigger_argv[] = { "/sbin/udevadm", "trigger", "--action=add", NULL };
-  char *settle_argv[] = { "/sbin/udevadm", "settle", "--timeout=10", NULL };
+  static char *trigger_argv[] = { UDEVADM, "trigger", "--action=add", NULL };
+  static char *settle_argv[] = { UDEVADM, "settle", "--timeout=10", NULL };
   struct timeval tv[2];
   long time_ms = 0; /* processing time in ms */
 
@@ -651,7 +651,7 @@ static int set_init(void) { /* {{{ */
 } /* }}} */
 
 static void kill_udev(pid_t pid) { /* {{{ */
-  char *argv[] = { UDEVADM, "control", "--stop-exec-queue", NULL };
+  static char *argv[] = { UDEVADM, "control", "--stop-exec-queue", NULL };
   char path[PATH_MAX];
   char *exe;
 
