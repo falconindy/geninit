@@ -150,12 +150,10 @@ __build_image() { # {{{
   local builder= module= line= mod= file=
 
   # this must be resolved to an absolute path
-  if [[ ${imagename:0:1} != / ]]; then
+  if [[ $imagename && ${imagename:0:1} != / ]]; then
     imagename=$(readlink -f "$imagename")
+    [[ $imagename ]] || die "Failed to resolve path to imagename"
   fi
-
-  # make sure readlink didn't fail
-  [[ $imagename ]] || die "Failed to resolve path to imagename"
 
   # parse builder array
   for builder in "${builders[@]}"; do
