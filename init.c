@@ -31,6 +31,7 @@
 #define BUSYBOX       "/bin/busybox"
 #define UDEVD         "/sbin/udevd"
 #define UDEVADM       "/sbin/udevadm"
+#define MODPROBE      "/sbin/modprobe"
 
 int rootflags = 0;
 int quiet = 0;
@@ -376,9 +377,10 @@ static void load_extra_modules(void) { /* {{{ */
 
   /* load early modules */
   if (getenv("earlymodules") != NULL) {
-    argv = calloc(2, sizeof(argv));
-    *argv = "/sbin/modprobe";
-    *(argv + 1) = "-qa";
+    argv = calloc(3, sizeof(argv));
+    *argv = MODPROBE;
+    *(argv + 1) = "-qab";
+    *(argv + 2) = "--";
 
     var = strdup(getenv("earlymodules"));
     for (tok = strtok(var, ","); tok; tok = strtok(NULL, ",")) {
@@ -386,7 +388,7 @@ static void load_extra_modules(void) { /* {{{ */
       *(argv + (modcount - 1)) = tok;
     }
 
-    if (modcount > 2) {
+    if (modcount > 3) {
       argv = realloc(argv, sizeof(argv) * ++modcount);
       *(argv + (modcount - 1)) = NULL;
       forkexecwait(argv);
@@ -411,16 +413,17 @@ static void load_extra_modules(void) { /* {{{ */
       }
 
       /* commands + number of modules + NULL */
-      argv = calloc(modcount + 3, sizeof argv);
+      argv = calloc(modcount + 4, sizeof argv);
 
-      *argv++ = "/sbin/modprobe";
-      *argv++ = "-qa";
+      *argv++ = MODPROBE;
+      *argv++ = "-qab";
+      *argv++ = "--";
       while ((tok = strtok(NULL, " \n"))) {
         *argv++ = tok;
       }
 
       /* rewind */
-      argv -= (modcount + 2);
+      argv -= (modcount + 3);
 
       /* run modprobe */
       forkexecwait(argv);
@@ -708,10 +711,10 @@ static int switch_root(char *argv[]) { /* {{{ */
   chdir("/");
 
   /* redirect stdin/stdout/stderr to new console */
-  close(0);
+  close(STDIN_FILENO);
   open("/dev/console", O_RDWR);
-  dup2(0, 1);
-  dup2(0, 2);
+  dup2(STDIN_FILENO, STDOUT_FILENO);
+  dup2(STDIN_FILENO, STDERR_FILENO);
 
   /* exec real pid shady */
   execv(argv[0], argv);
