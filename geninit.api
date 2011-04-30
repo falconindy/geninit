@@ -163,8 +163,11 @@ add_binary() { # {{{
   __add_file "${dest#$basedir}" "${binary#$basedir}" 755
 
   # we always need the big bad linker
-  __add_slink "$ld_so" "$(readlink -e "$ld_so")"
-  add_file "$(readlink -e "$ld_so")"
+  if [[ ! -e $buildroot$ld_so ]]; then
+    resolved=$(readlink -e "$basedir$ld_so")
+    __add_slink "$ld_so" "$resolved"
+    __add_file "${resolved#$basedir}" "$resolved" 755
+  fi
 } # }}}
 
 add_pipe() { # {{{
