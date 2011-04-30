@@ -6,15 +6,14 @@
 
 build() {
   # base filesystem structure
-  for dir in proc sys dev {,s}bin usr{,/bin,/lib,/sbin} run new_root; do
-    add_dir /$dir
-  done
+  add_dir /new_root
+  add_dir /dev
+  add_dir /proc
+  add_dir /sys
 
   # necessary binaries
-  add_binary /lib/initcpio/dinit /init
+  add_binary "@$_sharedir/init" "/init"
   add_binary /sbin/modprobe
-
-  add_file "$CONFIG" /config
 }
 
 help() {
