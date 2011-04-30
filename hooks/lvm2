@@ -1,0 +1,14 @@
+#!/bin/sh
+
+/sbin/modprobe -q dm-mod 2>/dev/null
+
+if [ -e /sys/class/misc/device-mapper ]; then
+  if [ ! -e /dev/mapper/control ]; then
+    read major minor </sys/class/misc/device-mapper/dev
+    /bin/mknod /dev/mapper/control c "$major" "$minor"
+  fi
+
+  echo ":: Activating logical volumes..."
+  /sbin/lvm ${quiet:+--quiet} vgchange --sysinit -a y
+fi
+
