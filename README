@@ -56,9 +56,9 @@ And building a pair lighter images for my custom kernel...
 :: Image creation completed successfully
 
 :: Building image from preset: kernel26-rampage-ubase
-==> -k 2.6.38.4-rampage -c /etc/geninit.conf.ubase -g /boot/initramfs-rampage-failsafe 
+==> -k 2.6.38.4-rampage -c /etc/geninit.conf.ubase -g /boot/initramfs-rampage-ubase
 :: Building: [ubase]
-:: Creating lzma initramfs: /boot/initramfs-rampage-failsafe
+:: Creating lzma initramfs: /boot/initramfs-rampage-ubase
 3680 blocks
 :: Image creation completed successfully
 
