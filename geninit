@@ -3,22 +3,18 @@
 shopt -s extglob
 
 # tender vittles
-_sysconfdir=/etc
-_sharedir=.
-builderdir=${_sharedir}/builders
-baseconfig=${_sysconfdir}/geninit.conf
-carch=$(uname -m)
-kernver=$(uname -r)
-
-# Alter PATH. We want to make sure that /bin and /sbin are favored, since
-# we specifically rely on GNU coreutils
-PATH=/sbin:/bin:$PATH
+declare _sysconfdir=/etc
+declare _sharedir=.
+declare builderdir=${_sharedir}/builders
+declare baseconfig=${_sysconfdir}/geninit.conf
+declare carch=$(uname -m)
+declare kernver=$(uname -r)
 
 # error codes
-ENOENT=2
-EACCES=13
-EEXIST=17
-EINVAL=22
+declare -i ENOENT=2
+declare -i EACCES=13
+declare -i EEXIST=17
+declare -i EINVAL=22
 
 # globals
 declare -i automods=0
@@ -317,6 +313,10 @@ while getopts ':b:c:g:hk:Mp:S:sz:' flag; do
    \?) die "invalid option -- '$OPTARG'" ;;
   esac
 done
+
+# Alter PATH. We want to make sure that /bin and /sbin are favored, since
+# we specifically rely on GNU coreutils
+PATH=/sbin:/bin:$PATH
 
 # ----------------- #
 ##  sanity checks  ##

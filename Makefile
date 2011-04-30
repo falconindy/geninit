@@ -32,7 +32,7 @@ install: init
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit/builders builders/*
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit geninit.api geninit.quirks
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit init
-	sed "s#^_sharedir=.*#_sharedir=${PREFIX}/share/geninit#" < geninit > ${DESTDIR}${PREFIX}/sbin/geninit
+	sed "s#^declare _sharedir=.*#declare _sharedir=${PREFIX}/share/geninit#" < geninit > ${DESTDIR}${PREFIX}/sbin/geninit
 	chmod 755 ${DESTDIR}${PREFIX}/sbin/geninit
 .PHONY: install
 
