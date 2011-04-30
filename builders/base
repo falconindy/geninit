@@ -6,6 +6,7 @@ build() {
   add_dir /proc
   add_dir /sys
   add_dir /dev
+  add_dir /run
 
   # busybox --install won't create dirs
   add_dir /usr/bin

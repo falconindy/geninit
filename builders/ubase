@@ -10,6 +10,7 @@ build() {
   add_dir /dev
   add_dir /proc
   add_dir /sys
+  add_dir /run
 
   # necessary binaries
   add_binary "@$_sharedir/init" "/init"
