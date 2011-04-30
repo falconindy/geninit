@@ -336,7 +336,7 @@ config=${config:-$baseconfig}
 # if specified, does the basedir exist? trim any trailing slash
 if [[ $basedir ]]; then
   basedir=${basedir%/}
-  [[ -d $basedir ]] || die "basedir \`$basedir' not found"
+  [[ $basedir ]] && { [[ -d $basedir ]] || die "basedir \`$basedir' not found"; }
 fi
 
 # does the kernel exist inside the basedir?
