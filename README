@@ -7,3 +7,62 @@ it's clean.
 it's hackable.
 it might even do your dishes...
 
+
+Building a standard kernel image preset...
+# time geninit -p kernel26
+:: Building image from preset: kernel26-default
+  ==> -k 2.6.38-ARCH -c /etc/geninit.conf -g /boot/initramfs-ARCH 
+:: Building: [base]
+:: Building: [udev]
+:: Building: [autodetect]
+:: Building: [ata]
+:: Building: [usbinput]
+:: Building: [filesystems]
+:: Generating module dependencies
+:: Creating lzma initramfs: /boot/initramfs-ARCH
+6959 blocks
+:: Image creation completed successfully
+
+:: Building image from preset: kernel26-failsafe
+  ==> -k 2.6.38-ARCH -c /etc/geninit.conf -g /boot/initramfs-ARCH-failsafe -S autodetect
+:: Building: [base]
+:: Building: [udev]
+:: Building: [ata]
+:: Building: [usbinput]
+:: Building: [filesystems]
+:: Generating module dependencies
+:: Creating lzma initramfs: /boot/initramfs-ARCH-failsafe
+15411 blocks
+:: Image creation completed successfully
+
+real  0m5.266s
+user  0m4.293s
+sys   0m0.115s
+
+
+And building a pair lighter images for my custom kernel...
+# time geninit -p kernel26-rampage
+:: Building image from preset: kernel26-rampage-default
+ ==> -k 2.6.38.4-rampage -c /etc/geninit.conf -g /boot/initramfs-rampage
+:: Building: [base]
+:: Building: [udev]
+:: Building: [autodetect]
+:: Building: [ata]
+:: Building: [usbinput]
+:: Building: [filesystems]
+:: Generating module dependencies
+:: Creating lzma initramfs: /boot/initramfs-rampage
+6082 blocks
+:: Image creation completed successfully
+
+:: Building image from preset: kernel26-rampage-ubase
+==> -k 2.6.38.4-rampage -c /etc/geninit.conf.ubase -g /boot/initramfs-rampage-failsafe 
+:: Building: [ubase]
+:: Creating lzma initramfs: /boot/initramfs-rampage-failsafe
+3680 blocks
+:: Image creation completed successfully
+
+real  0m2.102s
+user  0m1.930s
+sys   0m0.046s
+
