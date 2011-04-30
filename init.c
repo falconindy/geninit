@@ -391,7 +391,7 @@ static void load_extra_modules(void) { /* {{{ */
     if (modcount > 3) {
       argv = realloc(argv, sizeof(argv) * ++modcount);
       *(argv + (modcount - 1)) = NULL;
-      execv(argv[0], argv);
+      forkexecwait(argv);
     }
     free(argv);
   }
@@ -426,16 +426,9 @@ static void load_extra_modules(void) { /* {{{ */
       argv -= (modcount + 3);
 
       /* run modprobe */
-      execv(argv[0], argv);
+      forkexecwait(argv);
 
       free(argv);
-      break;
-    }
-  }
-
-  /* wait on all children to finish */
-  while (waitpid(-1, NULL, 0)) {
-    if (errno == ECHILD) {
       break;
     }
   }
