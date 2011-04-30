@@ -73,16 +73,15 @@ cleanup() { # {{{
 
 usage() { # {{{
   cat<<USAGE
-geninit
-Usage: geninit [options]
+usage: geninit [options]
 
   Options:
    -b <path>      Use base directory (default: /)
    -c <file>      Specify a different config file (default: $_sysconfdir/geninit.conf)
    -g <path>      Path and name of generated image (dry-run if unspecified)
    -h             Display this help message
-   -k <kver>      Specify a different kernel version (default: $(uname -r))
-   -p <preset>    Build using a preset file
+   -k <kver>      Specify a kernel version (default: $kernver)
+   -p <preset>    Build using a preset file (any of $_sysconfdir/geninit.d/*.preset)
    -S <names>     Skip the specified builders during the build process
    -s             Preserve buildroot after image creation
    -z <method>    Override compression method
