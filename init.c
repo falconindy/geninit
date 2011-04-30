@@ -444,7 +444,7 @@ static void load_extra_modules(void) { /* {{{ */
 } /* }}} */
 
 static void trigger_udev_events(void) { /* {{{ */
-  static char *trigger_argv[] = { UDEVADM, "trigger", "--action=add", NULL };
+  char **argv;
   static char *settle_argv[] = { UDEVADM, "settle", "--timeout=10", NULL };
   struct timeval tv[2];
   long time_ms = 0; /* processing time in ms */
@@ -454,17 +454,35 @@ static void trigger_udev_events(void) { /* {{{ */
     return;
   }
 
-  msg("triggering uevents...\n");
+  /* 4 args + NULL */
+  argv = calloc(5, sizeof argv);
+  argv[0] = UDEVADM;
+  argv[1] = "trigger";
+  argv[2] = "--action=add";
+  argv[3] = strdup("--type=subsystems");
 
+  msg("triggering uevents...\n");
   gettimeofday(&tv[0], NULL);
-  forkexecwait(trigger_argv);
+
+  /* subsystems */
+  forkexecwait(argv);
+
+  /* devices */
+  free(argv[3]);
+  argv[3] = "--type=devices";
+  forkexecwait(argv);
+
+  /* wait up to 10s for processing to finish */
   forkexecwait(settle_argv);
+
   gettimeofday(&tv[1], NULL);
 
   time_ms += (tv[1].tv_sec - tv[0].tv_sec) * 1000; /* s => ms */
   time_ms += (tv[1].tv_usec - tv[0].tv_usec) / 1000; /* us => ms */
 
   msg("finished udev processing in %ldms\n", time_ms);
+
+  free(argv);
 
 } /* }}} */
 
