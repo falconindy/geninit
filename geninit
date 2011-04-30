@@ -79,8 +79,10 @@ usage: geninit [options]
    -b <path>      Use base directory (default: /)
    -c <file>      Specify a different config file (default: $_sysconfdir/geninit.conf)
    -g <path>      Path and name of generated image (dry-run if unspecified)
+   -H <builder>   Display help for a specified builder
    -h             Display this help message
    -k <kver>      Specify a kernel version (default: $kernver)
+   -L             List available builders
    -p <preset>    Build using a preset file (any of $_sysconfdir/geninit.d/*.preset)
    -S <names>     Skip the specified builders during the build process
    -s             Preserve buildroot after image creation
@@ -88,6 +90,27 @@ usage: geninit [options]
 
 USAGE
   exit
+} # }}}
+
+builderlist() { # {{{
+  local -a builders=("$_sharedir"/builders/*)
+
+  (( ${#builders[*]} )) || die "no builders found"
+
+  info "Available builders -- use -H <builder> for help with a specific builder"
+  printf '%s\n' "${builders[@]##*/}" | column -c$(tput cols)
+  cleanup 0
+} # }}}
+
+builderhelp() { # {{{
+  local builder=$1
+
+  [[ -f $_sharedir/builders/$builder ]] || die "no such builder: $builder"
+  . "$_sharedir/builders/$builder"
+  type -t helpmsg >/dev/null || die "no help for builder: $builder"
+  info "$builder"
+  helpmsg
+  cleanup 0
 } # }}}
 
 # --------------- #
@@ -296,13 +319,15 @@ trap 'cleanup 143' SIGTERM
 ##  option parsing  ##
 # ------------------ #
 
-while getopts ':b:c:g:hk:Mp:S:sz:' flag; do
+while getopts ':b:c:g:H:hk:LMp:S:sz:' flag; do
   case $flag in
     b) basedir=$OPTARG ;;
     c) config=$OPTARG ;;
     g) imagename=$OPTARG ;;
+    H) builderhelp $OPTARG ;;
     h) usage ;;
     k) kernver=$OPTARG ;;
+    L) builderlist ;;
     M) automods=1 ;;
     p) preset=$OPTARG ;;
     S) skipbuilders=(${OPTARG//,/ }) ;;
