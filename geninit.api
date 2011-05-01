@@ -139,6 +139,9 @@ add_binary() { # {{{
     return $? # return with add_file's return val
   fi
 
+  # the binary itself
+  __add_file "${dest#$basedir}" "${binary#$basedir}" 755 || return 1
+
   IFS=$'\n' read -rd '' -a sodeps < <(ldd "$binary" |\
       sed -n '2,$s#.\+=>[[:blank:]]\+\([^ ]\+\) (.\+#\1#p')
 
@@ -159,8 +162,6 @@ add_binary() { # {{{
     fi
   done
 
-  # the binary itself
-  __add_file "${dest#$basedir}" "${binary#$basedir}" 755
 } # }}}
 
 add_pipe() { # {{{
