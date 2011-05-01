@@ -373,19 +373,19 @@ static void load_extra_modules(void) { /* {{{ */
   char *tok, *var;
   char **argv;
   char line[PATH_MAX];
-  int modcount = 2;
+  int modcount = 3;
 
   /* load early modules */
   if (getenv("earlymodules") != NULL) {
     argv = calloc(3, sizeof(argv));
-    *argv = MODPROBE;
-    *(argv + 1) = "-qab";
-    *(argv + 2) = "--";
+    argv[0] = MODPROBE;
+    argv[1] = "-qab";
+    argv[2] = "--";
 
     var = strdup(getenv("earlymodules"));
     for (tok = strtok(var, ","); tok; tok = strtok(NULL, ",")) {
       argv = realloc(argv, sizeof(argv) * ++modcount);
-      *(argv + (modcount - 1)) = tok;
+      argv[modcount - 1] = tok;
     }
 
     if (modcount > 3) {
@@ -394,6 +394,7 @@ static void load_extra_modules(void) { /* {{{ */
       forkexecwait(argv);
     }
     free(argv);
+    free(var);
   }
 
   /* load modules from /config */
@@ -409,15 +410,15 @@ static void load_extra_modules(void) { /* {{{ */
 
       modcount = atoi(tok);
       if (!modcount) {
-        continue;
+        break;
       }
 
       /* commands + number of modules + NULL */
-      argv = calloc(modcount + 4, sizeof argv);
-
+      argv = calloc(3 + modcount + 1, sizeof argv);
       *argv++ = MODPROBE;
       *argv++ = "-qab";
       *argv++ = "--";
+
       while ((tok = strtok(NULL, " \n"))) {
         *argv++ = tok;
       }
