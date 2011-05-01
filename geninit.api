@@ -189,7 +189,10 @@ use_hookscript() { # {{{
 } # }}}
 
 add_driver_classes() { # {{{
-  # add a class of drivers, as a dir relative to /lib/modules/$kernver/kernel
+  # add a class of drivers, as a dir relative to /lib/modules/$kernver/kernel.
+  # if you need to block addition of modules, you can add glob patterns to the
+  # 'modulefilter' array. They must be quoted and the filter is cleared after
+  # parsing of every builder.
   #   $@: directories
 
   local -a mods
@@ -209,6 +212,11 @@ add_driver_classes() { # {{{
     IFS=$'\n' read -rd '' -a mods < <(grep -xFf <(printf '%s\n' "${mods[@]//-/_}") "$autodetect_cache")
 
   for mod in "${mods[@]}"; do
+    # check for filter match
+    for filter in "${modulefilter[@]}"; do
+      [[ $mod = $filter ]] && continue 2
+    done
+
     add_module "$mod" && (( ++ret ))
   done
 

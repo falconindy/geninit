@@ -192,6 +192,7 @@ __build_image() { # {{{
 
     info "Building: [$builder]"
     build
+    unset modulefilter
   done
 
   # add extra modules from config
