@@ -221,7 +221,10 @@ __build_image() { # {{{
 
   # add extra files from config
   for file in "${files[@]}"; do
-    add_file "$file" || err "File not found: $file"
+    local src=${file%%::*}
+    local dest=${file##*::}
+    [[ $dest ]] || dest=$src
+    add_binary "$src" "$dest" || err "File not found: $file"
   done
 
   # only create depmod files if there's modules added
