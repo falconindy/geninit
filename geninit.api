@@ -184,7 +184,7 @@ use_hookscript() { # {{{
   # "$builder" comes from the builder parsing loop in main
 
   [[ $builder ]] || return 1
-  add_file "$basedir$_sharedir/hooks/$builder" "/hooks/$builder"
+  __add_file "$basedir$_sharedir/hooks/$builder" "/hooks/$builder" 755
 } # }}}
 
 add_driver_classes() { # {{{
