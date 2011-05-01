@@ -55,10 +55,6 @@ in_array() { # {{{
   return 1 # Not Found
 } # }}}
 
-qgrep() { # {{{
-  2>/dev/null grep -q "$@"
-} # }}}
-
 kmodinfo() { # {{{
   modinfo -0k $kernver "$@"
 } # }}}
