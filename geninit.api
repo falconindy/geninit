@@ -5,8 +5,7 @@
 #
 # To authors of builders:
 #   these functions should be used over other functions in geninit such as
-#   __add_file, which generally have no awareness of things such as $basedir or
-#   $kernver.
+#   __add_file, which have no awareness of things such as $basedir or $kernver.
 #
 
 shopt -s extglob
@@ -191,8 +190,8 @@ use_hookscript() { # {{{
 add_driver_classes() { # {{{
   # add a class of drivers, as a dir relative to /lib/modules/$kernver/kernel.
   # if you need to block addition of modules, you can add glob patterns to the
-  # 'modulefilter' array. They must be quoted and the filter is cleared after
-  # parsing of every builder.
+  # 'modulefilter' array within your builder. They must be quoted and the
+  # filter is cleared after parsing of each builder.
   #   $@: directories
 
   local -a mods
