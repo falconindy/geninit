@@ -283,6 +283,49 @@ static void parse_envstring(char *envstring) { /* {{{ */
 
 } /* }}} */
 
+static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
+  int statloc, pfds[2];
+  ssize_t len;
+  pid_t pid;
+
+  if (pipe(pfds) != 0) {
+    perror("pipe");
+    return errno;
+  }
+
+  pid = fork();
+  if (pid < 0) {
+    perror("fork");
+    return errno;
+  }
+
+  if (pid == 0) {
+    close(pfds[0]); /* unused by child */
+
+    /* child writes on FD 3 will be received by the parent */
+    if (dup2(pfds[1], 3) == -1) {
+      perror("dup2");
+      _exit(errno);
+    }
+
+    /* now redundant */
+    close(pfds[1]);
+
+    execv(argv[0], argv);
+    fprintf(stderr, "exec: %s: %s", argv[0], strerror(errno));
+    _exit(errno);
+  }
+
+  close(pfds[1]); /* unused by parent */
+
+  memset(buffer, 0, CMDLINE_SIZE);
+  len = read(pfds[0], buffer, CMDLINE_SIZE);
+  waitpid(pid, &statloc, 0);
+  close(pfds[0]);
+
+  return len;
+} /* }}} */
+
 /* meat */
 static void mount_setup(void) { /* {{{ */
   int ret;
@@ -524,15 +567,20 @@ static void run_hooks(void) { /* {{{ */
     if (strncmp(line, "%HOOKS%", 7) == 0) {
       strtok(line, " \n"); /* ditch the fieldname */
       while ((hook = strtok(NULL, " \n"))) {
-        char path[PATH_MAX];
-        snprintf(path, PATH_MAX, "/hooks/%s", hook);
+        char response[CMDLINE_SIZE], path[PATH_MAX];
 
+        snprintf(path, PATH_MAX, "/hooks/%s", hook);
         if (access(path, X_OK) != 0) {
           continue;
         }
 
-        char *argv[] = { path, path, NULL };
-        forkexecwait(argv);
+        char *argv[] = { path, NULL };
+
+        /* anything written on fd 3 by the child, we'll read back and parse as
+         * environment. read_child_response will return the value from read(3) */
+        if (read_child_response(argv, response) > 0) {
+          parse_envstring(response);
+        }
       }
 
       break;
