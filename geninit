@@ -376,9 +376,14 @@ PATH=/sbin:/bin:$PATH
 ##  sanity checks  ##
 # ----------------- #
 
-# declared as an array to force expansion. would be great if arch had
-# symlink pointing to this from /lib/ld.so
-ld_so=($basedir/lib/ld-linux?(-${carch//_/-}).so.?*)
+# declared as an array to force expansion. we have to be careful that the wrong
+# linker isn't picked for mulitlib systems, so we branch on $carch.
+case $carch in
+  i686) ld_so=("$basedir"/lib/ld-linux.so.?*) ;;
+  x86_64) ld_so=("$basedir"/lib/ld-linux-${carch//_/-}.so.?*) ;;
+  *) die "unknown architecture: $carch" ;;
+esac
+
 if (( ${#ld_so[*]} != 1 )); then # uh oh...
   die "failed to resolve the location of /lib/ld.so. Please report this bug."
 fi
