@@ -1,6 +1,7 @@
 #!/bin/bash
 
 shopt -s extglob
+shopt -s nullglob
 
 # tender vittles
 declare _sysconfdir=/etc
@@ -352,7 +353,7 @@ PATH=/sbin:/bin:$PATH
 
 # declared as an array to force expansion. would be great if arch had
 # symlink pointing to this from /lib/ld.so
-ld_so=($basedir/lib/ld-linux-${carch//_/-}.so.?*)
+ld_so=($basedir/lib/ld-linux?(-${carch//_/-}).so.?*)
 if (( ${#ld_so[*]} != 1 )); then # uh oh...
   die "failed to resolve the location of /lib/ld.so. Please report this bug."
 fi
