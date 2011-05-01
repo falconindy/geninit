@@ -83,7 +83,7 @@ kmodinfo() { # {{{
 } # }}}
 
 cleanup() { # {{{
-  if (( savebuildroot )); then
+  if (( savebuildroot )) && [[ -d $buildroot ]]; then
     info "buildroot preserved at: $buildroot"
   else
     rm -rf "$tmpdir"
