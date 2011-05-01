@@ -228,6 +228,13 @@ __build_image() { # {{{
     add_binary "$src" "$dest" || err "File not found: $file"
   done
 
+  # we always need the linker
+  if [[ ! -e $buildroot$ld_so ]]; then
+    resolved=$(readlink -e "$ld_so")
+    __add_slink "${ld_so#$basedir}" "${resolved#$basedir}"
+    __add_file "${resolved#$basedir}" "${resolved#$basedir}" 755
+  fi
+
   # only create depmod files if there's modules added
   if [[ -d $buildroot$moduledir ]]; then
     info "Generating module dependencies"
