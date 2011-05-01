@@ -220,58 +220,24 @@ static void movemount(const char *src, const char *dest) { /* {{{ */
   }
 } /* }}} */
 
-/* meat */
-static void mount_setup(void) { /* {{{ */
-  int ret;
-
-  /* setup basic filesystems */
-  mount("proc", "/proc", "proc", TMPFS_FLAGS, NULL);
-  mount("sys", "/sys", "sysfs", TMPFS_FLAGS, NULL);
-  mount("tmpfs", "/run", "tmpfs", TMPFS_FLAGS, "mode=1777,size=10M");
-
-  /* ENODEV returned on non-existant FS */
-  ret = mount("udev", "/dev", "devtmpfs", MS_NOSUID, "mode=0755,size=10M");
-  if (ret == -1 && errno == ENODEV) {
-    /* devtmpfs not available, use standard tmpfs */
-    mount("udev", "/dev", "tmpfs", MS_NOSUID, "mode=0755,size=10M");
-
-    /* create necessary nodes
-     * crw------- 1 root root 5, 1 Apr  2 18:30 /dev/console
-     * crw-rw-rw- 1 root root 1, 3 Apr  2 18:30 /dev/null
-     * crw-rw-rw- 1 root root 1, 5 Apr  2 18:30 /dev/zero
-     */
-    mknod("/dev/console", S_IFCHR|0600, makedev(5, 1));
-    mknod("/dev/null", S_IFCHR|0666, makedev(1, 3));
-    mknod("/dev/zero", S_IFCHR|0666, makedev(1, 5));
-    mknod("/dev/mem", S_IFCHR|0640, makedev(1, 1));
-  }
-} /* }}} */
-
-static void put_cmdline(void) { /* {{{ */
-  char cmdline[CMDLINE_SIZE], token[CMDLINE_SIZE];
-  char quoted = '\0';
+static void parse_envstring(char *envstring) { /* {{{ */
   char *c, *tp;
+  char token[CMDLINE_SIZE];
+  char quoted = '\0'; /* flag for inside/outside quoted region */
   int isvar = 0;
-  FILE *fp;
+
+  if (!envstring) {
+    return;
+  }
 
   /* a bit of pointer/var hell going on...
-   *   c = pointer along contents of /proc/cmdline
+   *   c = pointer along contents of envstring
    *   token = container for current token being parsed
    *   tp = pointer along contents of token
    */
 
-  fp = fopen("/proc/cmdline", "r");
-  if (!fp) {
-    return;
-  }
-
-  if (!fgets(cmdline, CMDLINE_SIZE, fp)) {
-    return;
-  }
-  fclose(fp);
-
   tp = token;
-  for (c = cmdline; *c; c++) {
+  for (c = envstring; *c; c++) {
     if (*c == '#') { /* full stop! */
       break;
     }
@@ -314,6 +280,50 @@ static void put_cmdline(void) { /* {{{ */
 
     *tp++ = *c;
   }
+
+} /* }}} */
+
+/* meat */
+static void mount_setup(void) { /* {{{ */
+  int ret;
+
+  /* setup basic filesystems */
+  mount("proc", "/proc", "proc", TMPFS_FLAGS, NULL);
+  mount("sys", "/sys", "sysfs", TMPFS_FLAGS, NULL);
+  mount("tmpfs", "/run", "tmpfs", TMPFS_FLAGS, "mode=1777,size=10M");
+
+  /* ENODEV returned on non-existant FS */
+  ret = mount("udev", "/dev", "devtmpfs", MS_NOSUID, "mode=0755,size=10M");
+  if (ret == -1 && errno == ENODEV) {
+    /* devtmpfs not available, use standard tmpfs */
+    mount("udev", "/dev", "tmpfs", MS_NOSUID, "mode=0755,size=10M");
+
+    /* create necessary nodes
+     * crw------- 1 root root 5, 1 Apr  2 18:30 /dev/console
+     * crw-rw-rw- 1 root root 1, 3 Apr  2 18:30 /dev/null
+     * crw-rw-rw- 1 root root 1, 5 Apr  2 18:30 /dev/zero
+     */
+    mknod("/dev/console", S_IFCHR|0600, makedev(5, 1));
+    mknod("/dev/null", S_IFCHR|0666, makedev(1, 3));
+    mknod("/dev/zero", S_IFCHR|0666, makedev(1, 5));
+    mknod("/dev/mem", S_IFCHR|0640, makedev(1, 1));
+  }
+} /* }}} */
+
+static void put_cmdline(void) { /* {{{ */
+  char cmdline[CMDLINE_SIZE];
+  FILE *fp;
+
+  fp = fopen("/proc/cmdline", "r");
+  if (!fp) {
+    return;
+  }
+
+  if (fgets(cmdline, CMDLINE_SIZE, fp) != NULL) {
+    parse_envstring(cmdline);
+  }
+
+  fclose(fp);
 } /* }}} */
 
 static void disable_modules(void) { /* {{{ */
