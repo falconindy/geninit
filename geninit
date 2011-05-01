@@ -263,6 +263,10 @@ __build_preset() { # {{{
 
   # preset pulls in a known array 'presets'
   for preset in "${presets[@]}"; do
+    if [[ ${preset:0:1} == ! ]]; then # marked disabled
+      continue;
+    fi
+
     # resolve kernel version
     if [[ -z $ALL_kver ]]; then
       err "No kernel version defined for preset \`$1'"
