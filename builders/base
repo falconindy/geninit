@@ -14,11 +14,13 @@ build() {
   add_dir /sbin
   add_dir /bin
 
+  add_binary "@$_sharedir/init" "/init"
   add_binary /lib/initcpio/busybox /bin/busybox
   add_binary /sbin/modprobe
   add_binary /sbin/blkid
 
-  add_binary "@$_sharedir/init" "/init"
+  # we need this for hooks to run
+  add_symlink /bin/busybox /bin/sh
 
   add_file /etc/modprobe.d/usb-load-ehci-first.conf
 }
