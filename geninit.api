@@ -133,7 +133,7 @@ add_binary() { # {{{
   dest=${2:-$binary}
   mode=$(stat -c %a "$binary")
 
-  if ! "$ld_so" --verify "$binary"; then
+  if ! "$ld_so" --verify "$binary" &>/dev/null; then
     # this isn't a binary!
     __add_file "${binary#$basedir}" "$binary" "$mode"
     return $? # return with add_file's return val
