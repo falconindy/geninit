@@ -229,11 +229,9 @@ __build_image() { # {{{
   done
 
   # we always need the linker
-  if [[ ! -e $buildroot$ld_so ]]; then
-    resolved=$(readlink -e "$ld_so")
-    __add_slink "${ld_so#$basedir}" "${resolved#$basedir}"
-    __add_file "${resolved#$basedir}" "${resolved#$basedir}" 755
-  fi
+  file=$(readlink -e "$ld_so")
+  __add_slink "${ld_so#$basedir}" "${file#$basedir}"
+  __add_file "${file#$basedir}" "${file#$basedir}" 755
 
   # only create depmod files if there's modules added
   if [[ -d $buildroot$moduledir ]]; then
