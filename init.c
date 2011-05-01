@@ -826,6 +826,7 @@ int main(int argc, char *argv[]) {
   movemount("/proc", NEWROOT "/proc");
   movemount("/sys", NEWROOT "/sys");
   movemount("/run", NEWROOT "/run");
+  movemount("/dev", NEWROOT "/dev");
 
   argv[0] = getenv("init");
   switch_root(argv);
