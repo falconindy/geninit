@@ -1,3 +1,12 @@
+/*
+ * init.c
+ *
+ * This file is part of geninit.
+ *
+ * PID 1 for early userspace.
+ *
+ */
+
 #define _GNU_SOURCE
 #include <ctype.h>
 #include <dirent.h>

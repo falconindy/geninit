@@ -1,14 +1,13 @@
 #!/bin/bash
-
 #
-# geninit public API
+# geninit.api
 #
-# To authors of builders:
-#   these functions should be used over other functions in geninit such as
-#   __add_file, which have no awareness of things such as $basedir or $kernver.
+# This file is part of geninit.
 #
-
-shopt -s extglob
+# declares intended public API calls for builders to use. These functions
+# should be used over other functions in geninit such as __add_file, which have
+# no awareness of things such as $basedir or $kernver.
+#
 
 add_dir() { # {{{
   # add a directory (with parents)

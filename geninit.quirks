@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# geninit.quirks
+#
+# This file declares quirks for modules which have non-explicit dependencies.
+#
 
 declare -A modquirks
 

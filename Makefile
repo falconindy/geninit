@@ -1,3 +1,9 @@
+#
+# Makefile
+#
+# This file is part of geninit.
+#
+
 VERSION = 0.1
 
 all: init doc

@@ -3,8 +3,7 @@ geninit - a modular initramfs creation utility
 it's fast.
 it's flexible.
 it's familiar.
-it's clean.
-it's hackable.
+it's clean and hackable.
 it might even do your dishes...
 
 
@@ -40,7 +39,7 @@ user  0m4.293s
 sys   0m0.115s
 
 
-And building a pair lighter images for my custom kernel...
+And building a pair of lighter images for my custom kernel...
 # time geninit -p kernel26-rampage
 :: Building image from preset: kernel26-rampage-default
  ==> -k 2.6.38.4-rampage -c /etc/geninit.conf -g /boot/initramfs-rampage
