@@ -665,8 +665,6 @@ static int set_init(void) { /* {{{ */
 static void kill_udev(pid_t pid) { /* {{{ */
   static char *info_argv[] = { UDEVADM, "info", "--cleanup-db", NULL };
   static char *control_argv[] = { UDEVADM, "control", "--exit", NULL };
-  char path[PATH_MAX];
-  char *exe;
 
   if (pid <= 1) { /* error launching udev */
     return;
