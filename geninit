@@ -106,6 +106,7 @@ usage: geninit [options]
    -p <preset>    Build using a preset file (any of $_sysconfdir/geninit.d/*.preset)
    -S <names>     Skip the specified builders during the build process
    -s             Preserve buildroot after image creation
+   -t <path>      Specify an alternate location for temporary workspace
    -z <method>    Override compression method
 
 USAGE
@@ -347,7 +348,7 @@ trap 'cleanup 143' SIGTERM
 ##  option parsing  ##
 # ------------------ #
 
-while getopts ':b:c:g:H:hk:LMp:S:sz:' flag; do
+while getopts ':b:c:g:H:hk:LMp:S:st:z:' flag; do
   case $flag in
     b) basedir=$OPTARG ;;
     c) config=$OPTARG ;;
@@ -360,6 +361,7 @@ while getopts ':b:c:g:H:hk:LMp:S:sz:' flag; do
     p) preset=$OPTARG ;;
     S) skipbuilders=(${OPTARG//,/ }) ;;
     s) savebuildroot=1 ;;
+    t) tmpdir=$OPTARG ;;
     z) ocompress=$OPTARG ;; # named differently to allow overriding
     :) die "option requires an argument -- '$OPTARG'" ;;
    \?) die "invalid option -- '$OPTARG'" ;;
@@ -391,6 +393,15 @@ if [[ $basedir ]]; then
   [[ $basedir ]] && { [[ -d $basedir ]] || die "basedir \`$basedir' not found"; }
 fi
 
+tmpdir=${tmpdir:-$(mktemp -d /tmp/${0##*/}.XXXXXX)}
+if [[ $tmpdir ]]; then
+  tmpdir=${tmpdir%/}
+  [[ -d $tmpdir ]] || die "tmpdir \`$tmpdir' not found"
+  [[ -w $tmpdir ]] || die "unable to write to specified tmpdir \`$tmpdir'"
+else
+  die "No tmpdir defined. Unable to continue"
+fi
+
 # does the kernel exist inside the basedir?
 [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
 
@@ -416,8 +427,7 @@ fi
 ##  int main  ##
 # ------------ #
 
-# define a few paths for convenience
-tmpdir=$(mktemp -d /tmp/${0##*/}.XXXXXX)
+# define a few more paths for convenience
 buildroot=$tmpdir/root
 autodetect_cache=$tmpdir/autodetect.cache
 moduledir=/lib/modules/$kernver
