@@ -43,13 +43,13 @@ declare -i EINVAL=22
 # globals
 declare -i automods=0
 declare -i savebuildroot=0
+declare -i dryrun=0
 declare basedir=
 declare config=
 declare imagename=
 declare preset=
 declare skipbuilders=
 declare ocompress=
-declare dryrun=
 
 # -------------------------- #
 ##  general util functions  ##
