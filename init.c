@@ -97,10 +97,12 @@ static int forkexecwait(char **argv) { /* {{{ */
 
   if (WIFEXITED(statloc) > 0) {
     return WEXITSTATUS(statloc);
+  } else if (WIFSIGNALED(statloc)) {
+    return WTERMSIG(statloc) + 128;
   }
 
-  /* should do a better job of this */
-  return 1;
+  /* we really shouldn't get here */
+  return 255;
 } /* }}} */
 
 static char *sanitize_var(char *var) { /* {{{ */
