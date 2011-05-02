@@ -120,7 +120,7 @@ add_binary() { # {{{
   (( $# )) || return 1
 
   local -a sodeps
-  local binary= dest= mode= sodep= resolved= dirname=
+  local regex= binary= dest= mode= sodep= resolved= dirname=
 
   if [[ ${1:0:1} == @ ]]; then # assert an absolute path
     binary=${1:1}
@@ -136,22 +136,20 @@ add_binary() { # {{{
   if ! "$ld_so" --verify "$binary" &>/dev/null; then
     # this isn't a binary!
     __add_file "${binary#$basedir}" "$binary" "$mode"
-    return $? # return with add_file's return val
+    return $? # return with __add_file's return val
   fi
 
   # the binary itself
   __add_file "${dest#$basedir}" "${binary#$basedir}" 755 || return 1
 
-  IFS=$'\n' read -rd '' -a sodeps < <(ldd "$binary" |\
-      sed -n '2,$s#.\+=>[[:blank:]]\+\([^ ]\+\) (.\+#\1#p')
+  # resolve sodeps
+  regex='.+ => (.*) \(.*\)'
+  while read line; do
+    [[ $line =~ $regex ]] && sodep="${BASH_REMATCH[1]}" || continue
 
-  for sodep in "${sodeps[@]}"; do
-    [[ -e $sodep ]] || continue
-
-    if [[ -f $sodep ]]; then # but wait! a symlink is a regular file! FFFUUUUU
-      mode=$(stat -c %a "$sodep")
+    if [[ -f $sodep ]]; then # -f follows symlinks, don't believe it!
       if [[ ! -L $sodep ]]; then
-        __add_file "$sodep"
+        __add_file "$sodep" "$basedir$sodep" "$(stat -c %a "$sodep")"
       else
         resolved=$(readlink -e "$basedir$sodep")
         dirname=${resolved%/*}
@@ -160,7 +158,7 @@ add_binary() { # {{{
         __add_file "${resolved#$basedir}" "$resolved" 755
       fi
     fi
-  done
+  done < <(__ldd "$binary")
 
 } # }}}
 

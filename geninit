@@ -138,6 +138,10 @@ builderhelp() { # {{{
 ##  private API  ##
 # --------------- #
 
+__ldd() {
+  LD_TRACE_LOADED_OBJECTS=1 "$ld_so" "$@"
+}
+
 __add_file() { # {{{
   # add a file to $buildroot
   #   $1: pathname on initcpio
