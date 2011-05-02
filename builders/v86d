@@ -1,0 +1,13 @@
+#!/bin/bash
+
+build() {
+  add_binary "/sbin/v86d"
+  add_file "/etc/modprobe.d/uvesafb.conf"
+}
+
+helpmsg() {
+  cat<<EOF
+This hook includes support for v86d, the userspace helper for uvesafb.
+EOF
+}
+
