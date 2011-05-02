@@ -44,6 +44,7 @@
 
 int rootflags = 0;
 int quiet = 0;
+pid_t udevpid = 0;
 
 /* utility */
 static dev_t hex2dev(char *hexstring) { /* {{{ */
@@ -412,29 +413,28 @@ static void disable_modules(void) { /* {{{ */
   free(var);
 } /* }}} */
 
-static pid_t launch_udev(void) { /* {{{ */
+static void launch_udev(void) { /* {{{ */
   static char *argv[] = { UDEVD, "--resolve-names=never", NULL };
-  pid_t pid;
 
   if (access(UDEVD, X_OK) != 0) {
-    return 0;
+    return;
   }
 
   msg("Starting udev...\n");
 
-  pid = vfork();
-  if (pid == -1) {
+  udevpid = vfork();
+  if (udevpid == -1) {
     perror("fork");
-    return 1;
+    return;
   }
 
-  if (pid == 0) {
+  if (udevpid == 0) {
     execv(argv[0], argv);
     perror("exec: " UDEVD);
     _exit(errno);
   }
 
-  return pid;
+  /* we assume here that udevd started correctly, but we won't trust this. */
 } /* }}} */
 
 static void load_extra_modules(void) { /* {{{ */
@@ -510,8 +510,12 @@ static void trigger_udev_events(void) { /* {{{ */
   struct timeval tv[2];
   long time_ms = 0; /* processing time in ms */
 
-  /* don't assume we have udev available */
-  if (access(UDEVADM, X_OK) != 0) {
+  if (udevpid <= 0) { /* never had a chance... */
+    return;
+  }
+
+  if (kill(udevpid, 0) != 0) { /* is it still alive? */
+    udevpid = 1;
     return;
   }
 
@@ -716,8 +720,12 @@ static int set_init(void) { /* {{{ */
   return access(path, F_OK);
 } /* }}} */
 
-static void kill_udev(udevpid) { /* {{{ */
-  if (udevpid <= 1) {
+static void kill_udev(void) { /* {{{ */
+  /* pid = 0  : we never attempted to start udev
+   * pid = -1 : udev fork failed
+   * pid = 1  : udev died at some point */
+
+  if (udevpid <= 0) {
     return;
   }
 
@@ -735,7 +743,7 @@ static void kill_udev(udevpid) { /* {{{ */
    * this will someday change and state will be kept in /run/device-mapper
    * instead. */
 
-  udevadm("control", "--exit", NULL);
+  udevadm("control", "--exit", NULL); /* waits up to 60 seconds */
   udevadm("info", "--cleanup-db", NULL);
 } /*}}}*/
 
@@ -789,14 +797,12 @@ static int switch_root(char *argv[]) { /* {{{ */
 } /* }}} */
 
 int main(int argc, char *argv[]) {
-  pid_t udevpid;
-
   (void)argc; /* poor unloved argc */
 
   mount_setup();                /* create early tmpfs mountpoints */
   put_cmdline();                /* parse cmdline and set environment */
   disable_modules();            /* blacklist modules passed in on cmdline */
-  udevpid = launch_udev();      /* try to launch udev */
+  launch_udev();                /* try to launch udev */
   load_extra_modules();         /* load modules passed in on cmdline */
   trigger_udev_events();        /* read and process uevent queue */
   disable_hooks();              /* delete hooks specified on cmdline */
@@ -817,7 +823,7 @@ int main(int argc, char *argv[]) {
     start_rescue_shell();
   }
 
-  kill_udev(udevpid);           /* shutdown udev in prep switch_root  */
+  kill_udev();                  /* shutdown udev in prep switch_root  */
 
   /* migrate to the new root */
   movemount("/proc", NEWROOT "/proc");
