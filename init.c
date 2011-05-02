@@ -337,6 +337,11 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
   return len;
 } /* }}} */
 
+static int udevadm(char *action, char *arg1, char *arg2) { /* {{{ */
+  char *argv[] = { UDEVADM, action, arg1, arg2, NULL };
+  return forkexecwait(argv);
+} /* }}} */
+
 /* meat */
 static void mount_setup(void) { /* {{{ */
   int ret;
@@ -502,8 +507,6 @@ static void load_extra_modules(void) { /* {{{ */
 } /* }}} */
 
 static void trigger_udev_events(void) { /* {{{ */
-  char **argv;
-  static char *settle_argv[] = { UDEVADM, "settle", "--timeout=10", NULL };
   struct timeval tv[2];
   long time_ms = 0; /* processing time in ms */
 
@@ -512,36 +515,18 @@ static void trigger_udev_events(void) { /* {{{ */
     return;
   }
 
-  /* 4 args + NULL */
-  argv = calloc(5, sizeof argv);
-  argv[0] = UDEVADM;
-  argv[1] = "trigger";
-  argv[2] = "--action=add";
-  argv[3] = strdup("--type=subsystems");
-
   msg("triggering uevents...\n");
+
   gettimeofday(&tv[0], NULL);
-
-  /* subsystems */
-  forkexecwait(argv);
-
-  /* devices */
-  free(argv[3]);
-  argv[3] = "--type=devices";
-  forkexecwait(argv);
-
-  /* wait up to 10s for processing to finish */
-  forkexecwait(settle_argv);
-
+  udevadm("trigger", "--action=add", "--type=subsystems");
+  udevadm("trigger", "--action=add", "--type=devices");
+  udevadm("settle", "--timeout=30", NULL);
   gettimeofday(&tv[1], NULL);
 
   time_ms += (tv[1].tv_sec - tv[0].tv_sec) * 1000; /* s => ms */
   time_ms += (tv[1].tv_usec - tv[0].tv_usec) / 1000; /* us => ms */
 
   msg("finished udev processing in %ldms\n", time_ms);
-
-  free(argv);
-
 } /* }}} */
 
 static void disable_hooks(void) { /* {{{ */
@@ -731,17 +716,27 @@ static int set_init(void) { /* {{{ */
   return access(path, F_OK);
 } /* }}} */
 
-static void kill_udev(pid_t pid) { /* {{{ */
-  static char *info_argv[] = { UDEVADM, "info", "--cleanup-db", NULL };
-  static char *control_argv[] = { UDEVADM, "control", "--exit", NULL };
-
-  if (pid <= 1) { /* error launching udev */
+static void kill_udev(udevpid) { /* {{{ */
+  if (udevpid <= 1) {
     return;
   }
 
-  forkexecwait(info_argv);
-  forkexecwait(control_argv);
+  /* As per upstream, this is the proper way to shut down udev>=168:
+   *
+   *  udevadm control --exit
+   *  udevadm info --cleanup-db
+   *
+   * What happens on the initramfs is not supposed to make it into later
+   * userspace.  These are completely separate environments with different
+   * rules both due to the nature of initramfs as well as the fact that we're
+   * running with a non-standard udev ruleset. The only exception here is
+   * dm/lvm, which requires their udev rules to have OPTIONS+=db_persist added
+   * in order to keep a persistent state through to later userspace. Ideally,
+   * this will someday change and state will be kept in /run/device-mapper
+   * instead. */
 
+  udevadm("control", "--exit", NULL);
+  udevadm("info", "--cleanup-db", NULL);
 } /*}}}*/
 
 static int switch_root(char *argv[]) { /* {{{ */
