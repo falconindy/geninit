@@ -1,4 +1,3 @@
-* support NFS?
-* verify support lvm2 and crypt
-* enhance output: better error output, color!
+* output: add color and better error feedback
+* cleanup and import more hooks
 
