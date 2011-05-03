@@ -322,7 +322,6 @@ __build_preset() { # {{{
     fi
 
     # we've got enough to relaunch geninit now
-    # TODO: don't relaunch. Do this the sane way.
     info "Building image from preset: $1-$preset"
     printf '  ==> %s\n' "-k $ALL_kver -c $cfg -g $basedir$imagename $opts"
     "$0" -b "$basedir" -k "$ALL_kver" -c "$cfg" -g "$basedir$imagename" $opts || return 1
