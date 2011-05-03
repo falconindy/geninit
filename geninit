@@ -261,9 +261,9 @@ __build_image() { # {{{
 
   pushd "$buildroot" &>/dev/null
   find . -print0 | cpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename"
+  pipesave=("${PIPESTATUS[@]}") # save immediately
   popd &>/dev/null
 
-  pipesave=("${PIPESTATUS[@]}") # save immediately
   (( pipesave[0] )) && die "failed to create filelist (find reported error)"
   (( pipesave[1] )) && die "failed to create cpio archive (cpio reported error)"
   (( pipesave[2] )) && die "$compress reported error compressing image"
