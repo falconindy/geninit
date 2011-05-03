@@ -27,18 +27,18 @@ shopt -s extglob
 shopt -s nullglob
 
 # tender vittles
-declare _sysconfdir=/etc
-declare _sharedir=.
-declare builderdir=${_sharedir}/builders
-declare baseconfig=${_sysconfdir}/geninit.conf
-declare carch=$(uname -m)
+declare -r _sysconfdir=/etc
+declare -r _sharedir=.
+declare -r builderdir=${_sharedir}/builders
+declare -r baseconfig=${_sysconfdir}/geninit.conf
+declare -r carch=$(uname -m)
 declare kernver=$(uname -r)
 
 # error codes
-declare -i ENOENT=2
-declare -i EACCES=13
-declare -i EEXIST=17
-declare -i EINVAL=22
+declare -ri ENOENT=2
+declare -ri EACCES=13
+declare -ri EEXIST=17
+declare -ri EINVAL=22
 
 # globals
 declare -i automods=0
@@ -442,9 +442,9 @@ fi
 # ------------ #
 
 # define a few more paths for convenience
-buildroot=$tmpdir/root
-autodetect_cache=$tmpdir/autodetect.cache
-moduledir=/lib/modules/$kernver
+declare -r buildroot=$tmpdir/root
+declare -r autodetect_cache=$tmpdir/autodetect.cache
+declare -r moduledir=/lib/modules/$kernver
 
 if (( automods )); then
   . "$_sharedir/builders/autodetect" || die "unable to source autodetect builder"
