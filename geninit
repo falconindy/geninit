@@ -403,8 +403,7 @@ if [[ $basedir ]]; then
 fi
 
 # mktemp takes care of our error handling here
-otmpdir=${otmpdir%/}
-tmpdir=$(readlink -e "$(mktemp -d "${otmpdir-/tmp}"/${0##*/}.XXXXXX)") || cleanup 1
+tmpdir=$(readlink -e "$(mktemp -d "${otmpdir:-/tmp}"/${0##*/}.XXXXXX)") || cleanup 1
 
 # does the kernel exist inside the basedir?
 [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
