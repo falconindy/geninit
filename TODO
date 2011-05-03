@@ -1,3 +1,4 @@
 * output: add color and better error feedback
 * cleanup and import more hooks
+* syslogging for init? see how dracut and friends do it
 
