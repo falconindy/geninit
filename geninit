@@ -370,7 +370,7 @@ while getopts ':b:c:g:H:hk:LMp:S:st:z:' flag; do
     p) preset=$OPTARG ;;
     S) skipbuilders=(${OPTARG//,/ }) ;;
     s) savebuildroot=1 ;;
-    t) tmpdir=$OPTARG ;;
+    t) otmpdir=$OPTARG ;;
     z) ocompress=$OPTARG ;; # named differently to allow overriding
     :) die "option requires an argument -- '$OPTARG'" ;;
    \?) die "invalid option -- '$OPTARG'" ;;
@@ -407,14 +407,9 @@ if [[ $basedir ]]; then
   [[ $basedir ]] && { [[ -d $basedir ]] || die "basedir \`$basedir' not found"; }
 fi
 
-tmpdir=${tmpdir:-$(mktemp -d /tmp/${0##*/}.XXXXXX)}
-if [[ $tmpdir ]]; then
-  tmpdir=${tmpdir%/}
-  [[ -d $tmpdir ]] || die "tmpdir \`$tmpdir' not found"
-  [[ -w $tmpdir ]] || die "unable to write to specified tmpdir \`$tmpdir'"
-else
-  die "No tmpdir defined. Unable to continue"
-fi
+# mktemp takes care of our error handling here
+otmpdir=${otmpdir%/}
+tmpdir=$(readlink -e "$(mktemp -d "${otmpdir-/tmp}"/${0##*/}.XXXXXX)") || cleanup 1
 
 # does the kernel exist inside the basedir?
 [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
