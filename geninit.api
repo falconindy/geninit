@@ -80,7 +80,7 @@ add_module() { # {{{
   module=${1%.ko?(.gz)}
 
   if [[ -z $basedir ]]; then # fast path =)
-    read -rd '' modpath < <(kmodinfo -n "$module" 2>/dev/null)
+    read -rd '' modpath < <(__kmodinfo -n "$module" 2>/dev/null)
   else # slow path =(
     read -rd '' modpath < <(find "$basedir$moduledir/kernel" -type f \
         -name "$module.ko" -o -name "$module.ko.gz" -print0)
@@ -91,7 +91,7 @@ add_module() { # {{{
   __add_file "${modpath#$basedir}" "$modpath" 644 || return 1
 
   # grab firmware
-  IFS=',' read -rd '' -a firmware < <(kmodinfo -F firmware "$modpath")
+  IFS=',' read -rd '' -a firmware < <(__kmodinfo -F firmware "$modpath")
   for fw in "${firmware[@]}"; do
     if [[ -e $basedir/lib/firmware/$fw ]]; then
       __add_file "/lib/firmware/$fw" "$basedir/lib/firmware/$fw" 644
@@ -99,7 +99,7 @@ add_module() { # {{{
   done
 
   # resolve deps
-  IFS=',' read -rd '' -a moddeps < <(kmodinfo -F depends "$modpath")
+  IFS=',' read -rd '' -a moddeps < <(__kmodinfo -F depends "$modpath")
   for dep in "${moddeps[@]}"; do
     add_module "$dep"
   done

@@ -78,10 +78,6 @@ in_array() { # {{{
   return 1 # Not Found
 } # }}}
 
-kmodinfo() { # {{{
-  modinfo -0k $kernver "$@"
-} # }}}
-
 cleanup() { # {{{
   if (( savebuildroot )) && [[ -d $buildroot ]]; then
     info "buildroot preserved at: $buildroot"
@@ -138,10 +134,6 @@ builderhelp() { # {{{
 ##  private API  ##
 # --------------- #
 
-__ldd() {
-  LD_TRACE_LOADED_OBJECTS=1 "$ld_so" "$@"
-}
-
 __add_file() { # {{{
   # add a file to $buildroot
   #   $1: pathname on initcpio
@@ -165,17 +157,6 @@ __add_dir() { # {{{
   install -dm$2 "$buildroot$1"
 } # }}}
 
-__add_slink() { # {{{
-  # add a symlink to $buildroot
-  #   $1: name on initcpio
-  #   $2: target of $1
-
-  (( $# == 2 )) || return $EINVAL
-  [[ -L $buildroot$1 ]] && return $EEXIST
-
-  ln -s "$2" "$buildroot$1"
-} # }}}
-
 __add_pipe() { # {{{
   # add a pipe to $buildroot
   #   $1: pathname on initcpio
@@ -185,6 +166,17 @@ __add_pipe() { # {{{
   [[ -e $buildroot$1 ]] && return $EEXIST
 
   mkfifo -m$2 "$buildroot$1"
+} # }}}
+
+__add_slink() { # {{{
+  # add a symlink to $buildroot
+  #   $1: name on initcpio
+  #   $2: target of $1
+
+  (( $# == 2 )) || return $EINVAL
+  [[ -L $buildroot$1 ]] && return $EEXIST
+
+  ln -s "$2" "$buildroot$1"
 } # }}}
 
 __build_image() { # {{{
@@ -341,6 +333,14 @@ __build_preset() { # {{{
     "$0" -b "$basedir" -k "$ALL_kver" -c "$cfg" -g "$basedir$imagename" $opts || return 1
     echo
   done
+} # }}}
+
+__kmodinfo() { # {{{
+  modinfo -0k $kernver "$@"
+} # }}}
+
+__ldd() { # {{{
+  LD_TRACE_LOADED_OBJECTS=1 "$ld_so" "$@"
 } # }}}
 
 # its a trap!
