@@ -301,20 +301,15 @@ __build_preset() { # {{{
 
     # resolve image name
     var=${preset}_image
-    if [[ -z ${!var} ]]; then
+    imagename=${!var}
+    if [[ -z $imagename ]]; then
       err "No imagename defined for preset \`$1'"
       return $EINVAL
     fi
-    imagename=${!var}
 
-    # extra config
+    # use extra config, falling back on ALL_config, falling back on the default
     var=${preset}_config
-    if [[ -z ${!var} ]]; then
-      # fallback on $ALL_config if its available
-      cfg=${ALL_config:-$_sysconfigdir/geninit.conf}
-    else
-      cfg=${!var}
-    fi
+    cfg=${!var:-${ALL_config:-$_sysconfigdir/geninit.conf}}
 
     # extra options are optional
     var=${preset}_options
