@@ -11,7 +11,7 @@ build() {
     xargs -I {} modprobe -d "${basedir:-/}" --set-version "$kernver" --resolve-alias {} |\
     sort -u >>"$autodetect_cache"
 
-  if (( UID == 0 )) || [[ $(groups) = *disk* ]]; then
+  if (( UID == 0 )) || [[ $(groups) == *disk* ]]; then
     if ! findmnt -uno fstype / >>"$autodetect_cache"; then
       err "failed to detect root filesystem"
     fi

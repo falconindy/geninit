@@ -206,7 +206,7 @@ add_driver_classes() { # {{{
   for mod in "${mods[@]}"; do
     # check for filter match
     for filter in "${modulefilter[@]}"; do
-      [[ $mod = $filter ]] && continue 2
+      [[ $mod == $filter ]] && continue 2
     done
 
     add_module "$mod" && (( ++ret ))

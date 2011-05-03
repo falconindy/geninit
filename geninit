@@ -73,7 +73,7 @@ in_array() { # {{{
   [[ -z $1 ]] && return 1 # Not Found
 
   for item; do
-    [[ $item = $needle ]] && return 0 # Found
+    [[ $item == $needle ]] && return 0 # Found
   done
   return 1 # Not Found
 } # }}}
@@ -254,10 +254,10 @@ __build_image() { # {{{
 
   if [[ $compress != cat ]]; then
     zopts=('-9')
-    [[ $compress = xz ]] && zopts+=('--check=crc32')
+    [[ $compress == xz ]] && zopts+=('--check=crc32')
   fi
 
-  info "Creating$([[ $compress = cat ]] || printf " $compress") initramfs: $imagename"
+  info "Creating$([[ $compress == cat ]] || printf " $compress") initramfs: $imagename"
 
   pushd "$buildroot" &>/dev/null
   find . -print0 | cpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename"
@@ -416,10 +416,10 @@ tmpdir=$(readlink -e "$(mktemp -d "${otmpdir-/tmp}"/${0##*/}.XXXXXX)") || cleanu
 
 # is our supplied compression method (if supplied) valid?
 compress=${ocompress:-$compress}
-if [[ -z $compress || $compress = none ]]; then
+if [[ -z $compress || $compress == none ]]; then
   compress=cat  # NOOP compressor
 else
-  [[ $compress = @(gzip|bzip2|lzma|xz) ]] || die "unknown compression method: $compress"
+  [[ $compress == @(gzip|bzip2|lzma|xz) ]] || die "unknown compression method: $compress"
   type -P "$compress" >/dev/null || die "failed to find \`$compress' binary in PATH"
 fi
 
