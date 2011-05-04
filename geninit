@@ -44,6 +44,7 @@ declare -i automods=0
 declare -i color=1
 declare -i dryrun=0
 declare -i savebuildroot=0
+declare -i verbose=0
 
 declare kernver=$(uname -r)
 declare basedir=
@@ -162,6 +163,7 @@ __add_file() { # {{{
   (( $# == 3 )) || return $EINVAL
   [[ -e $buildroot$1 ]] && return $EEXIST
 
+  (( verbose )) && plain "adding file: %s" "$1"
   install -Dm$3 "$2" "$buildroot$1"
 } # }}}
 
@@ -173,6 +175,7 @@ __add_dir() { # {{{
   (( $# == 2 )) || [[ $1 == /?* ]] || return $EINVAL
   [[ -e $buildroot$1 ]] && return $EEXIST
 
+  (( verbose )) && plain "adding dir: %s" "$1"
   install -dm$2 "$buildroot$1"
 } # }}}
 
@@ -184,6 +187,7 @@ __add_pipe() { # {{{
   (( $# == 2 )) || return $EINVAL
   [[ -e $buildroot$1 ]] && return $EEXIST
 
+  (( verbose )) && plain "adding pipe: %s" "$1"
   mkfifo -m$2 "$buildroot$1"
 } # }}}
 
@@ -195,6 +199,7 @@ __add_slink() { # {{{
   (( $# == 2 )) || return $EINVAL
   [[ -L $buildroot$1 ]] && return $EEXIST
 
+  (( verbose )) && plain "adding symlink: %s -> %s" "$2" "$1"
   ln -s "$2" "$buildroot$1"
 } # }}}
 
@@ -339,6 +344,10 @@ __build_preset() { # {{{
       return $ENOENT
     fi
 
+    # explicitly retain some options
+    (( verbose )) && opts+=' -v'
+    (( !color )) && opts+=' -C'
+
     # we've got enough to relaunch geninit now
     msg "Building image from preset: $1-$preset"
     msg2 "-k $ALL_kver -c $cfg -g $basedir$imagename $opts"
@@ -369,7 +378,7 @@ trap '((SHLVL==1)) && error "TERM signal caught. Exiting..."; cleanup 143' SIGTE
 ##  option parsing  ##
 # ------------------ #
 
-while getopts ':b:Cc:g:H:hk:LMp:S:st:z:' flag; do
+while getopts ':b:Cc:g:H:hk:LMp:S:st:vz:' flag; do
   case $flag in
     b) basedir=$OPTARG ;;
     c) config=$OPTARG ;;
@@ -384,6 +393,7 @@ while getopts ':b:Cc:g:H:hk:LMp:S:st:z:' flag; do
     S) skipbuilders=(${OPTARG//,/ }) ;;
     s) savebuildroot=1 ;;
     t) otmpdir=$OPTARG ;;
+    v) verbose=1 ;;
     z) ocompress=$OPTARG ;; # named differently to allow overriding
     :) die "option requires an argument -- '$OPTARG'" ;;
    \?) die "invalid option -- '$OPTARG'" ;;
