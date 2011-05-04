@@ -99,6 +99,7 @@ in_array() { # {{{
 } # }}}
 
 cleanup() { # {{{
+  (( SHLVL == 2 )) && [[ $2 ]] && error "$2"
   if (( savebuildroot )) && [[ -d $buildroot ]]; then
     msg "buildroot preserved at: $buildroot"
   else
@@ -370,8 +371,8 @@ __ldd() { # {{{
 } # }}}
 
 # its a trap!
-trap '((SHLVL==1)) && error "Aborted by user! Exiting..."; cleanup 130' SIGINT
-trap '((SHLVL==1)) && error "TERM signal caught. Exiting..."; cleanup 143' SIGTERM
+trap 'cleanup 130 "Aborted by user! Exiting..."' SIGINT
+trap 'cleanup 143 "TERM signal caught. Exiting..."' SIGTERM
 
 # source public API
 . "$_sharedir/geninit.api"
