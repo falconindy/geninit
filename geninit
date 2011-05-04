@@ -41,6 +41,7 @@ declare -r carch=$(uname -m)
 
 # options
 declare -i automods=0
+declare -i color=1
 declare -i dryrun=0
 declare -i savebuildroot=0
 
@@ -56,16 +57,33 @@ declare skipbuilders=
 ##  general util functions  ##
 # -------------------------- #
 
-err() { # {{{
-  printf 'error: %s\n' "$*"
-} >&2 # }}}
+plain() { # {{{
+  local mesg=$1; shift
+  printf "${BOLD}    ${mesg}${ALL_OFF}\n" "$@" >&2
+} # }}}
 
-info() { # {{{
-  printf ':: %s\n' "$*"
+msg() { # {{{
+	local mesg=$1; shift
+	printf "${GREEN}==>${NC}${BOLD} ${mesg}${NC}\n" "$@" >&2
+} # }}}
+
+msg2() { # {{{
+	local mesg=$1; shift
+	printf "${BLUE}  ->${NC}${BOLD} ${mesg}${NC}\n" "$@" >&2
+} # }}}
+
+warning() { # {{{
+	local mesg=$1; shift
+	printf "${YELLOW}==> $(gettext "WARNING:")${NC}${BOLD} ${mesg}${NC}\n" "$@" >&2
+} # }}}
+
+error() { # {{{
+	local mesg=$1; shift
+	printf "${RED}==> $(gettext "ERROR:")${NC}${BOLD} ${mesg}${NC}\n" "$@" >&2
 } # }}}
 
 die() { # {{{
-  err "$*"
+  error "$*"
   cleanup 1
 } # }}}
 
@@ -81,7 +99,7 @@ in_array() { # {{{
 
 cleanup() { # {{{
   if (( savebuildroot )) && [[ -d $buildroot ]]; then
-    info "buildroot preserved at: $buildroot"
+    msg "buildroot preserved at: $buildroot"
   else
     rm -rf "$tmpdir"
   fi
@@ -115,7 +133,7 @@ builderlist() { # {{{
 
   (( ${#builders[*]} )) || die "no builders found"
 
-  info "Available builders -- use -H <builder> for help with a specific builder"
+  msg "Available builders -- use -H <builder> for help with a specific builder"
   printf '%s\n' "${builders[@]##*/}" | column -c$(tput cols)
   cleanup 0
 } # }}}
@@ -126,7 +144,7 @@ builderhelp() { # {{{
   [[ -f $_sharedir/builders/$builder ]] || die "no such builder: $builder"
   . "$_sharedir/builders/$builder"
   type -t helpmsg >/dev/null || die "no help for builder: $builder"
-  info "$builder"
+  msg "$builder"
   helpmsg
   cleanup 0
 } # }}}
@@ -195,25 +213,25 @@ __build_image() { # {{{
     in_array "$builder" "${skipbuilders[@]}" && continue
 
     if [[ ! -f $builderdir/$builder ]]; then
-      err "cannot find builder '$builder': No such file"
+      error "cannot find builder '$builder': No such file"
       continue
     fi
 
     ( # subshell to prevent namespace pollution
       . "$builderdir/$builder"
       if ! type -t build >/dev/null; then
-        err "no build function found in builder '$builder'"
+        error "no build function found in builder '$builder'"
         continue
       fi
 
-      info "Building: [$builder]"
+      msg2 "Building: [%s]" "$builder"
       build
     )
   done
 
   # add extra modules from config
   for mod in ${modules[@]}; do
-    add_module "$mod" || err "Module not found: $mod"
+    add_module "$mod" || error "Module not found: $mod"
   done
 
   # add extra files from config
@@ -221,7 +239,7 @@ __build_image() { # {{{
     local src=${file%%::*}
     local dest=${file##*::}
     [[ $dest ]] || dest=$src
-    add_binary "$src" "$dest" || err "File not found: $file"
+    add_binary "$src" "$dest" || error "File not found: $file"
   done
 
   # we always need the linker
@@ -231,7 +249,7 @@ __build_image() { # {{{
 
   # only create depmod files if there's modules added
   if [[ -d $buildroot$moduledir ]]; then
-    info "Generating module dependencies"
+    msg "Generating module dependencies"
     depmod -b "$buildroot" "$kernver"
     # trim excess depmod files
     rm "$buildroot$moduledir"/modules.!(dep|alias|symbols)
@@ -248,7 +266,7 @@ __build_image() { # {{{
   } > "$buildroot/config"
 
   if (( dryrun )); then
-    info "Dry run complete. Use -g <path> to create an initramfs."
+    msg "Dry run complete. Use -g <path> to create an initramfs."
     return
   fi
 
@@ -257,7 +275,7 @@ __build_image() { # {{{
     [[ $compress == xz ]] && zopts+=('--check=crc32')
   fi
 
-  info "Creating$([[ $compress == cat ]] || printf " $compress") initramfs: $imagename"
+  msg "Creating$([[ $compress == cat ]] || printf " $compress") initramfs: $imagename"
 
   pushd "$buildroot" &>/dev/null
   find . -print0 | cpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename"
@@ -268,7 +286,7 @@ __build_image() { # {{{
   (( pipesave[1] )) && die "failed to create cpio archive (cpio reported error)"
   (( pipesave[2] )) && die "$compress reported error compressing image"
 
-  info "Image creation completed successfully"
+  msg "Image creation completed successfully"
 
 } # }}}
 
@@ -278,12 +296,12 @@ __build_preset() { # {{{
   local -a presets
 
   if [[ ! -f $basedir$presetfile ]]; then
-    err "preset not found: $1"
+    error "preset not found: $1"
     return $ENOENT
   fi
 
   if ! . "$basedir$presetfile"; then
-    err "failed to read preset: $1"
+    error "failed to read preset: $1"
     return $EACCES
   fi
 
@@ -295,7 +313,7 @@ __build_preset() { # {{{
 
     # resolve kernel version
     if [[ -z $ALL_kver ]]; then
-      err "No kernel version defined for preset \`$1'"
+      error "No kernel version defined for preset \`$1'"
       return $EINVAL
     fi
 
@@ -303,7 +321,7 @@ __build_preset() { # {{{
     var=${preset}_image
     imagename=${!var}
     if [[ -z $imagename ]]; then
-      err "No imagename defined for preset \`$1'"
+      error "No imagename defined for preset \`$1'"
       return $EINVAL
     fi
 
@@ -317,13 +335,13 @@ __build_preset() { # {{{
 
     # this should always resolve to something (i hope)
     if [[ ! -f $basedir$cfg ]]; then
-      err "preset config file not found: \`$basedir$cfg'"
+      error "preset config file not found: \`$basedir$cfg'"
       return $ENOENT
     fi
 
     # we've got enough to relaunch geninit now
-    info "Building image from preset: $1-$preset"
-    printf '  ==> %s\n' "-k $ALL_kver -c $cfg -g $basedir$imagename $opts"
+    msg "Building image from preset: $1-$preset"
+    msg2 "-k $ALL_kver -c $cfg -g $basedir$imagename $opts"
     "$0" -b "$basedir" -k "$ALL_kver" -c "$cfg" -g "$basedir$imagename" $opts || return 1
     echo
   done
@@ -338,8 +356,8 @@ __ldd() { # {{{
 } # }}}
 
 # its a trap!
-trap 'cleanup 130' SIGINT
-trap 'cleanup 143' SIGTERM
+trap '((SHLVL==1)) && error "Aborted by user! Exiting..."; cleanup 130' SIGINT
+trap '((SHLVL==1)) && error "TERM signal caught. Exiting..."; cleanup 143' SIGTERM
 
 # source public API
 . "$_sharedir/geninit.api"
@@ -351,10 +369,11 @@ trap 'cleanup 143' SIGTERM
 ##  option parsing  ##
 # ------------------ #
 
-while getopts ':b:c:g:H:hk:LMp:S:st:z:' flag; do
+while getopts ':b:Cc:g:H:hk:LMp:S:st:z:' flag; do
   case $flag in
     b) basedir=$OPTARG ;;
     c) config=$OPTARG ;;
+    C) color=0 ;;
     g) imagename=$OPTARG ;;
     H) builderhelp $OPTARG ;;
     h) usage ;;
@@ -374,6 +393,26 @@ done
 # Alter PATH. We want to make sure that /bin and /sbin are favored, since
 # we specifically rely on GNU coreutils
 PATH=/sbin:/bin:$PATH
+
+if [[ -t 2 ]] && (( color )); then
+  # prefer terminal safe colored and bold text when tput is supported
+  if tput setaf 0 &>/dev/null; then
+    NC="$(tput sgr0)"
+    BOLD="$(tput bold)"
+    BLUE="${BOLD}$(tput setaf 4)"
+    GREEN="${BOLD}$(tput setaf 2)"
+    RED="${BOLD}$(tput setaf 1)"
+    YELLOW="${BOLD}$(tput setaf 3)"
+  else
+    NC="\e[1;0m"
+    BOLD="\e[1;1m"
+    BLUE="${BOLD}\e[1;34m"
+    GREEN="${BOLD}\e[1;32m"
+    RED="${BOLD}\e[1;31m"
+    YELLOW="${BOLD}\e[1;33m"
+  fi
+fi
+readonly NC BOLD BLUE GREEN RED YELLOW
 
 # ----------------- #
 ##  sanity checks  ##
@@ -437,7 +476,7 @@ declare -r moduledir=/lib/modules/$kernver
 if (( automods )); then
   . "$_sharedir/builders/autodetect" || die "unable to source autodetect builder"
   build
-  info "Autodetected modules"
+  msg "Autodetected modules"
   [[ -s $autodetect_cache ]] && cat "$autodetect_cache"
   cleanup 0
 fi
@@ -445,7 +484,7 @@ fi
 if [[ $preset ]]; then
   __build_preset "$preset"
 else
-  (( dryrun )) && info "Starting dry run"
+  (( dryrun )) && msg "Starting dry run"
   __build_image
 fi
 

@@ -37,11 +37,11 @@ add_file() { # {{{
     src=$basedir$1
   fi
 
-  [[ -f $src ]] || { err "$src: No such file"; return 1; }
+  [[ -f $src ]] || { error "$src: No such file"; return 1; }
 
   mode=$(stat -c %a "$src")
   if [[ -z $mode ]]; then
-    err "failed to stat file: \`$src'"
+    error "failed to stat file: \`$src'"
     return 1
   fi
 
@@ -128,7 +128,7 @@ add_binary() { # {{{
     binary=$basedir$1
   fi
 
-  [[ -f $binary ]] || { err "$binary not found"; return 1; }
+  [[ -f $binary ]] || { error "$binary not found"; return 1; }
 
   dest=${2:-$binary}
   mode=$(stat -c %a "$binary")
