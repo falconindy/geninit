@@ -245,7 +245,7 @@ __build_image() { # {{{
       . "$builderdir/$builder"
       if ! type -t build >/dev/null; then
         error "no build function found in builder '$builder'"
-        continue
+        exit 1
       fi
 
       msg2 "Building: [%s]" "$builder"
