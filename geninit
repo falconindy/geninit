@@ -26,30 +26,31 @@
 shopt -s extglob
 shopt -s nullglob
 
-# tender vittles
-declare -r _sysconfdir=/etc
-declare -r _sharedir=.
-declare -r builderdir=${_sharedir}/builders
-declare -r baseconfig=${_sysconfdir}/geninit.conf
-declare -r carch=$(uname -m)
-declare kernver=$(uname -r)
-
 # error codes
 declare -ri ENOENT=2
 declare -ri EACCES=13
 declare -ri EEXIST=17
 declare -ri EINVAL=22
 
-# globals
+# tender vittles
+declare -r _sysconfdir=/etc
+declare -r _sharedir=.
+declare -r builderdir=${_sharedir}/builders
+declare -r baseconfig=${_sysconfdir}/geninit.conf
+declare -r carch=$(uname -m)
+
+# options
 declare -i automods=0
-declare -i savebuildroot=0
 declare -i dryrun=0
+declare -i savebuildroot=0
+
+declare kernver=$(uname -r)
 declare basedir=
 declare config=
 declare imagename=
+declare ocompress=
 declare preset=
 declare skipbuilders=
-declare ocompress=
 
 # -------------------------- #
 ##  general util functions  ##
