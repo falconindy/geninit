@@ -523,7 +523,7 @@ fi
 if [[ $preset ]]; then
   __build_preset "$preset"
 else
-  (( dryrun )) && msg "Starting dry run"
+  (( dryrun )) && msg "Starting dry run" || msg "Starting build"
   __build_image
 fi
 
