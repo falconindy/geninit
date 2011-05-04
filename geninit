@@ -213,6 +213,25 @@ __build_image() { # {{{
     [[ $imagename ]] || die "Failed to resolve path to imagename"
   fi
 
+  # we always need the linker
+  file=$(readlink -e "$ld_so")
+  add_path_to_file "${ld_so#$basedir}"
+  __add_slink "${ld_so#$basedir}" "${file#$basedir}"
+  __add_file "${file#$basedir}" "${file#$basedir}" 755
+
+  # add extra modules from config
+  for mod in ${modules[@]}; do
+    add_module "$mod" || error "Module not found: $mod"
+  done
+
+  # add extra files from config
+  for file in "${files[@]}"; do
+    local src=${file%%::*}
+    local dest=${file##*::}
+    [[ $dest ]] || dest=$src
+    add_binary "$src" "$dest" || error "File not found: $file"
+  done
+
   # parse builder array
   for builder in "${builders[@]}"; do
     in_array "$builder" "${skipbuilders[@]}" && continue
@@ -233,24 +252,6 @@ __build_image() { # {{{
       build
     )
   done
-
-  # add extra modules from config
-  for mod in ${modules[@]}; do
-    add_module "$mod" || error "Module not found: $mod"
-  done
-
-  # add extra files from config
-  for file in "${files[@]}"; do
-    local src=${file%%::*}
-    local dest=${file##*::}
-    [[ $dest ]] || dest=$src
-    add_binary "$src" "$dest" || error "File not found: $file"
-  done
-
-  # we always need the linker
-  file=$(readlink -e "$ld_so")
-  __add_slink "${ld_so#$basedir}" "${file#$basedir}"
-  __add_file "${file#$basedir}" "${file#$basedir}" 755
 
   # only create depmod files if there's modules added
   if [[ -d $buildroot$moduledir ]]; then
