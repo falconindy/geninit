@@ -155,6 +155,25 @@ builderhelp() { # {{{
 ##  private API  ##
 # --------------- #
 
+__get_kernver() { # {{{
+  local kernel=$1
+
+  if [[ ${kernel:0:1} != / ]]; then
+    echo "$kernel"
+    return 0
+  fi
+
+  [[ -r $kernel ]] || return $ENOENT
+
+  read kernver _ < <(dd if="$basedir$kernel" bs=1 skip=$((0x38a4)))
+  if [[ $kernver ]]; then
+    echo "$kernver"
+    return 0
+  fi
+
+  return $EINVAL
+} # }}}
+
 __add_file() { # {{{
   # add a file to $buildroot
   #   $1: pathname on initcpio
@@ -392,7 +411,7 @@ while getopts ':b:Cc:g:H:hk:LMp:S:st:vz:' flag; do
     g) imagename=$OPTARG ;;
     H) builderhelp $OPTARG ;;
     h) usage ;;
-    k) kernver=$OPTARG ;;
+    k) kern=$OPTARG ;;
     L) builderlist ;;
     M) automods=1 ;;
     p) preset=$OPTARG ;;
@@ -460,6 +479,10 @@ fi
 tmpdir=$(readlink -e "$(mktemp -d "${otmpdir:-/tmp}"/${0##*/}.XXXXXX)") || cleanup 1
 
 # does the kernel exist inside the basedir?
+[[ $kern ]] && kernver=$(__get_kernver "$kern")
+if [[ -z $kernver ]]; then
+  die "failed to find kernel version in specified file: $kern"
+fi
 [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
 
 # is our supplied compression method (if supplied) valid?

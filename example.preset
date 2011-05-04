@@ -4,6 +4,7 @@
 # - presets can be disabled by prefixing with !
 # - each preset must have, at minimum, an image name defined
 # - extra options and config parameters are optional
+# - kver can be specified as a path to a kernel image or a version
 #
 
 presets=(default failsafe)
