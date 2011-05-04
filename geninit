@@ -180,7 +180,6 @@ __add_slink() { # {{{
 } # }}}
 
 __build_image() { # {{{
-  local -i modcount=0
   local -a zopts pipesave
   local builder= module= line= mod= file=
 
