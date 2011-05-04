@@ -205,6 +205,7 @@ __add_slink() { # {{{
 
 __build_image() { # {{{
   local -a zopts pipesave
+  local -i errors=0
   local builder= module= line= mod= file=
 
   # this must be resolved to an absolute path
@@ -215,13 +216,13 @@ __build_image() { # {{{
 
   # we always need the linker
   file=$(readlink -e "$ld_so")
-  add_path_to_file "${ld_so#$basedir}"
-  __add_slink "${ld_so#$basedir}" "${file#$basedir}"
-  __add_file "${file#$basedir}" "${file#$basedir}" 755
+  add_path_to_file "${ld_so#$basedir}" || (( ++errors ))
+  __add_slink "${ld_so#$basedir}" "${file#$basedir}" || (( ++errors ))
+  __add_file "${file#$basedir}" "${file#$basedir}" 755 || (( ++errors ))
 
   # add extra modules from config
   for mod in ${modules[@]}; do
-    add_module "$mod" || error "Module not found: $mod"
+    add_module "$mod" || { (( ++errors)); error "Module not found: $mod"; }
   done
 
   # add extra files from config
@@ -229,7 +230,7 @@ __build_image() { # {{{
     local src=${file%%::*}
     local dest=${file##*::}
     [[ $dest ]] || dest=$src
-    add_binary "$src" "$dest" || error "File not found: $file"
+    add_binary "$src" "$dest" || { (( ++errors)); error "File not found: $file"; }
   done
 
   # parse builder array
@@ -238,6 +239,7 @@ __build_image() { # {{{
 
     if [[ ! -f $builderdir/$builder ]]; then
       error "cannot find builder '$builder': No such file"
+      (( ++errors ))
       continue
     fi
 
@@ -256,7 +258,7 @@ __build_image() { # {{{
   # only create depmod files if there's modules added
   if [[ -d $buildroot$moduledir ]]; then
     msg "Generating module dependencies"
-    depmod -b "$buildroot" "$kernver"
+    depmod -b "$buildroot" "$kernver" || (( ++errors ))
     # trim excess depmod files
     rm "$buildroot$moduledir"/modules.!(dep|alias|symbols)
   fi
@@ -293,7 +295,9 @@ __build_image() { # {{{
   (( pipesave[2] )) && die "$compress reported error compressing image"
 
   msg "Image creation completed successfully"
+  (( errors )) && warning "Errors were encountered during creation. The image may not be complete."
 
+  return 0 # ignore error when (( errors )) evalutes to false
 } # }}}
 
 __build_preset() { # {{{
