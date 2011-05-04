@@ -1,19 +1,21 @@
-# vim:set ft=sh:
+#!/bin/bash
 
 build() {
-    MODULES="phram mtdblock"
-    BINARIES="/usr/bin/memdiskfind"
-    FILES=""
-    SCRIPT="memdisk"
-    add_file /lib/initcpio/udev/01-memdisk.rules /lib/udev/rules.d/01-memdisk.rules
+  use_hookscript
+
+  add_module phram
+  add_module mtdblock
+
+  add_binary /usr/bin/memdiskfind
+
+  add_file /lib/initcpio/udev/01-memdisk.rules /lib/udev/rules.d/01-memdisk.rules
 }
 
-help ()
-{
-cat <<HELPEOF
-  This hook detects a virtual disk created by the memdisk
-  tool (http://syslinux.zytor.com/wiki/index.php/MEMDISK).
-
-  It requires memdiskfind from syslinux 4.00 or newer.
+helpmsg() {
+  cat<<HELPEOF
+  This hook detects a virtual disk created by the memdisk tool
+  (http://syslinux.zytor.com/wiki/index.php/MEMDISK).
 HELPEOF
 }
+
+# vim: set et ts=2 sw=2:

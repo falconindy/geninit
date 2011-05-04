@@ -1,26 +1,30 @@
 #!/bin/bash
 
 build() {
+  local keymapfile utf8file
+
   use_hookscript
 
   eval "$(grep -E "^(LOCALE|KEYMAP)=" /etc/rc.conf)"
   if [[ $KEYMAP ]]; then
-    KEYMAP_FILE="$(mktemp ${TMPDIR}/keymap.XXXXXX)"
-    UTF8_FILE="$(mktemp ${TMPDIR}/keymap.XXXXXX)"
+    keymapfile="$(mktemp "$tmpdir/keymap.XXXXXX")"
+    utf8file="$(mktemp "$tmpdir/keymap.XXXXXX")"
     if [[ $LOCALE =~ utf ]]; then
-      echo "UTF8='yes'" > $UTF8_FILE
-      /bin/loadkeys -q -u $KEYMAP -b > $KEYMAP_FILE
+      echo "UTF8='yes'" > "$utf8file"
+      /bin/loadkeys -q -u $KEYMAP -b > "$keymapfile"
     else
-      echo "UTF8='no'" > $UTF8_FILE
-      /bin/loadkeys -q $KEYMAP -b > $KEYMAP_FILE
+      echo "UTF8='no'" > "$utf8file"
+      /bin/loadkeys -q $KEYMAP -b > "$keymapfile"
     fi
-    add_file "@$KEYMAP_FILE" /keymap.bin
-    add_file "@$UTF8_FILE" /keymap.utf8
+    add_file "@$keymapfile" /keymap.bin
+    add_file "@$utf8file" /keymap.utf8
   fi
 }
 
 helpmsg() {
-  cat<<EOF
+  cat<<HELPEOF
   This hook loads keymap(s) specified in rc.conf during early userspace.
-EOF
+HELPEOF
 }
+
+# vim: set et ts=2 sw=2:

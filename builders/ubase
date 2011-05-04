@@ -1,3 +1,4 @@
+#!/bin/bash
 # an absolutely bare bones setup. no busybox, no udev. you MUST declare all
 # needed modules in your config's MODULES array.
 #
@@ -17,10 +18,10 @@ build() {
   add_binary /sbin/modprobe
 }
 
-help() {
-  cat <<HELPEOF
+helpmsg() {
+  cat<<HELPEOF
   This hook sets up very little.
 HELPEOF
 }
 
-# vim: set et sw=2 ft=sh:
+# vim: set et ts=2 sw=2:

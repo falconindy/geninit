@@ -1,4 +1,4 @@
-# vim: set ft=sh:
+#!/bin/bash
 
 build() {
   add_driver_classes drivers/pcmcia drivers/ide/legacy && add_module sd_mod
@@ -10,7 +10,9 @@ build() {
 }
 
 helpmsg() {
-  cat<<EOF
+  cat<<HELPEOF
   This hook provides the necessary modules for a pcmcia root device.
-EOF
+HELPEOF
 }
+
+# vim: set et ts=2 sw=2:

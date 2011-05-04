@@ -1,12 +1,14 @@
-# vim: set ft=sh:
+#!/bin/bash
 
 build() {
-  add_file "/lib/initcpio/custom.dsdt" "DSDT.aml"
+  add_file "/lib/initcpio/custom.dsdt" "/DSDT.aml"
 }
 
 helpmsg() {
-  cat<<EOF
+  cat<<HELPEOF
   This hook loads a custom acpi dsdt file during boot. Place your custom dsdt
   file for inclusion in: /usr/share/geninit/custom.dsdt
-EOF
+HELPEOF
 }
+
+# vim: set et ts=2 sw=2:

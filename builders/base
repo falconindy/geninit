@@ -26,9 +26,10 @@ build() {
 }
 
 helpmsg() {
-  cat<<EOF
+  cat<<HELPEOF
   This hook provides a crucial base layout for the initramfs. Do not remove
   skip this unless you know exactly what you are doing.
-EOF
+HELPEOF
 }
 
+# vim: set et ts=2 sw=2:

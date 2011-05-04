@@ -216,3 +216,4 @@ add_driver_classes() { # {{{
   return $(( ! ret ))
 } # }}}
 
+# vim: set et sw=2 ft=sh:

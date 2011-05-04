@@ -23,9 +23,11 @@ build() {
 }
 
 helpmsg() {
-  cat <<EOF
+  cat<<HELPEOF
   This hook will use udev to create your root device node and detect the needed
   modules for your root device. It is also required for firmware loading in
   initramfs. It is recommended to use this hook.
-EOF
+HELPEOF
 }
+
+# vim: set et ts=2 sw=2:

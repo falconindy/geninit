@@ -506,3 +506,4 @@ fi
 
 cleanup $?
 
+# vim: set et sw=2 ft=sh:

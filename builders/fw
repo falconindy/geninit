@@ -1,4 +1,4 @@
-# vim: set ft=sh:
+#!/bin/bash
 
 build() {
   add_driver_classes drivers/firewire
@@ -14,3 +14,4 @@ helpmsg() {
 HELPEOF
 }
 
+# vim: set et ts=2 sw=2:

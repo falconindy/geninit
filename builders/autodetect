@@ -28,10 +28,11 @@ build() {
 }
 
 helpmsg() {
-  cat <<EOF
+  cat<<HELPEOF
   This hook autodetects needed modules for the initramfs. This hook should be
   placed after base in order to best take advantage of it. Any hooks placed
   prior to this hook will be installed in full.
-EOF
+HELPEOF
 }
 
+# vim: set et ts=2 sw=2:

@@ -7,7 +7,9 @@ build() {
 }
 
 helpmsg() {
-  cat <<EOF
+  cat<<HELPEOF
   This hook supports multi device btrfs volumes.
-EOF
+HELPEOF
 }
+
+# vim: set et ts=2 sw=2:

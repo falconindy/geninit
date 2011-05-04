@@ -1,19 +1,17 @@
-# vim: set ft=sh:
+#!/bin/bash
 
 build() {
-    MODULES="nfs $(checked_modules "/drivers/net/") "
+  use_hookscript
 
-    BINARIES=""
-    FILES=""
-    SCRIPT="net"
+  add_module nfs
+  add_driver_classes drivers/net
 
-    add_binary "/lib/initcpio/ipconfig" "/bin/ipconfig"
-    add_binary "/lib/initcpio/nfsmount" "/bin/nfsmount"
+  add_binary "/lib/initcpio/ipconfig" "/bin/ipconfig"
+  add_binary "/lib/initcpio/nfsmount" "/bin/nfsmount"
 }
 
-help ()
-{
-cat<<HELPEOF
+helpmsg() {
+  cat<<HELPEOF
   This hook loads the necessary modules for a network device.
   Detection will take place at runtime. To minimize the modules
   in the image, add the autodetect hook too.
@@ -106,3 +104,5 @@ cat<<HELPEOF
   to boot from a nfs root by autoconfiguration.
 HELPEOF
 }
+
+# vim: set et ts=2 sw=2:

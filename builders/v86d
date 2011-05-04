@@ -6,8 +6,9 @@ build() {
 }
 
 helpmsg() {
-  cat<<EOF
+  cat<<HELPEOF
 This hook includes support for v86d, the userspace helper for uvesafb.
-EOF
+HELPEOF
 }
 
+# vim: set et ts=2 sw=2:

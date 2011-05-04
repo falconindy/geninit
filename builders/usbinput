@@ -5,10 +5,11 @@ build() {
 }
 
 helpmsg() {
-  cat<<EOF
+  cat<<HELPEOF
   This hook loads the necessary modules for an usb input device. Detection
   will take place at runtime. To minimize the modules in the image, add the
   autodetect hook too.
-EOF
+HELPEOF
 }
 
+# vim: set et ts=2 sw=2:

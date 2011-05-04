@@ -10,3 +10,5 @@ helpmsg() {
   This hook adds filesystems modules to the image.
 HELPEOF
 }
+
+# vim: set et ts=2 sw=2:

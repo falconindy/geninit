@@ -5,8 +5,10 @@ build() {
 }
 
 helpmsg() {
-  cat<<EOF
+  cat<<HELPEOF
   This hook loads the necessary modules for a legacy ide root device. Chances
   are high that you can use the ata hook instead of this.
-EOF
+HELPEOF
 }
+
+# vim: set et ts=2 sw=2:
