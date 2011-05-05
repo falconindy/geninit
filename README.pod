@@ -162,8 +162,8 @@ type checking of the file is done.
 =item B<add_module> I<module_name>
 
 Add a kernel module to the image, specified by its name (with or without
-extension). Modules will be scanned for dependencies which will also be
-added to the image.
+extension). Modules will be scanned for dependencies and firmware which will
+also be added to the image.
 
 =item B<add_path_to_file> I<file>
 
