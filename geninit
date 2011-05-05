@@ -165,7 +165,7 @@ __get_kernver() { # {{{
 
   [[ -r $kernel ]] || return $ENOENT
 
-  read kernver _ < <(dd if="$basedir$kernel" bs=1 skip=$((0x38a4)))
+  read _ kernver < <(file -b $kernel | grep -o 'version [^ ]\+')
   if [[ $kernver ]]; then
     echo "$kernver"
     return 0
@@ -481,7 +481,7 @@ tmpdir=$(readlink -e "$(mktemp -d "${otmpdir:-/tmp}"/${0##*/}.XXXXXX)") || clean
 # does the kernel exist inside the basedir?
 [[ $kern ]] && kernver=$(__get_kernver "$kern")
 if [[ -z $kernver ]]; then
-  die "failed to find kernel version in specified file: $kern"
+  die "Invalid kernel specifier: $kern"
 fi
 [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
 
