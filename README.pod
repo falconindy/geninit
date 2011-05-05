@@ -121,11 +121,12 @@ which will be picked back up into the environment of init, e.g.
 
 =head1 BUILDER API
 
-geninit features a small API intended for usage by authors of builders. These
-are directory aware functions which error checking and are the preferred method
-of adding files to the cpio image from builders. If not already created, all
-functions will add leading path components to files and directories to the
-image for you.
+geninit features a small API intended for use by builders. These are base
+directory aware functions with error checking and are the recommended method of
+adding files to the cpio image from builders. Leading path componenets, if not
+already created, will be added implicitly. If, for some reason, you need to
+override the base directory and specify a truly absolute path, you can prefix a
+source argument with a '@'.
 
 =over 4
 
