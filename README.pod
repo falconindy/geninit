@@ -16,22 +16,22 @@ tailor the image to the system's hardware and software needs.
 
 =over 4
 
-=item B<-b> I<PATH>
+=item B<-b> I<basedir>
 
 Specify a base directory other than C</>. This is reserved for usage during a
 chroot. geninit will attempt to use as much as possible from the guest system,
 drawing only from the host system when necessary.
 
-=item B<-c> I<FILE>
+=item B<-c> I<config-file>
 
 Use an alterate config file. Defaults to C</etc/geninit.conf>.
 
-=item B<-g> I<PATH>
+=item B<-g> I<imagename>
 
 Specify the absolute path of the generated initramfs image. If unspecified,
 a dry-run will be performed and no image will be created.
 
-=item B<-H> I<BUILDER>
+=item B<-H> I<builder>
 
 Display the help message for a I<builder>. A list of available builders can
 be generated with the B<-L> option.
@@ -40,7 +40,7 @@ be generated with the B<-L> option.
 
 Display the help message and quit.
 
-=item B<-k> I<KERNEL>
+=item B<-k> I<kernel>
 
 Specify an alternate kernel version to create an image for. The kernel can be
 specified as an exact version (such as 2.6.38-ARCH), or provided as a path to
@@ -51,33 +51,33 @@ the kernel bzImage itself. By default, this is the currently loaded kernel.
 List all available builders for use in the I<builders> array in the config
 file.
 
-=item B<-p> I<PRESET>
+=item B<-p> I<preset>
 
 Specify a preset file to drive image creation. This is any file named with a
 .preset extension in C</etc/geninit.d>. An example preset file is packaged
 with geninit for explanatory purpose.
 
-=item B<-S> I<BUILDERS>
+=item B<-S> I<builders>
 
 A comma delimited list of builders to skip during image creation.
 
 =item B<-s>
 
-Instruct geninit to avoid removal of the temporary workspace after image
-creation. This is useful for debugging purposes.
+Save the temporary workspace after the build process. This is useful for
+debugging purposes.
 
-=item B<-t> I<PATH>
+=item B<-t> I<path>
 
 Specify an alterate version to the temporary directory used as a workspace. This
 needs to be a writeable directory with a minimum of 20mb free.
 
-=item B<-z> I<COMPRESSION>
+=item B<-z> I<compression>
 
 Override the compression method specified by the config file. geninit supports
 compression via B<gzip>, B<bzip2>, B<lzma>, and B<xz>. You can also use B<none>
-to disable compression entirely. Please note that your kernel I<must> support
-your method and choice and your kernel will not be checked for this support! If
-in doubt, gzip is a safe choice.
+to disable compression. Please note that your kernel I<must> support your
+method and choice and your kernel will not be checked for this support! If in
+doubt, gzip is a safe choice.
 
 =back
 
@@ -159,7 +159,7 @@ specified, the permissions of the FIFO will be 644.
 =item B<add_symlink> I<target> I<link>
 
 Add a symlink to the image, located at the absolute path specified by link,
-pointing to the path specified by target.
+and pointing to the path specified by target.
 
 =item B<use_hookscript>
 
@@ -168,10 +168,6 @@ as the builder to the image, to be run during bootstrap. Hook scripts should
 be located in C</usr/share/geninit/hooks>.
 
 =back
-
-=head1 SEE ALSO
-
-B<cpio>(1), B<initrd>(4)
 
 =head1 AUTHOR
 
