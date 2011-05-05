@@ -46,8 +46,9 @@ strip: init
 	strip --strip-all init
 .PHONY: strip
 
-doc:
-	@echo "maybe i'll have some doc one day"
+doc: geninit.8
+geninit.8: README.pod
+	pod2man --section=8 --center="geninit manual" --name="GENINIT" --release="geninit ${VERSION}" $< > $@
 .PHONY: doc
 
 dist:
