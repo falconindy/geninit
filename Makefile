@@ -28,7 +28,10 @@ init: init.c
 	${CC} -c ${CFLAGS} ${CPPFLAGS} init.c
 	${CC} -o $@ ${LDFLAGS} init.o
 
-install: init
+install-doc: doc
+	install -Dm644 geninit.8 ${DESTDIR}${PREFIX}/share/man/man8/geninit.8
+
+install: init install-doc
 	install -dm755 ${DESTDIR}${PREFIX}/share/geninit/builders
 	install -dm755 ${DESTDIR}${PREFIX}/share/geninit/hooks
 	install -dm755 ${DESTDIR}${PREFIX}/sbin
