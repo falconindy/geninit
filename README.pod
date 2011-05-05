@@ -123,7 +123,7 @@ which will be picked back up into the environment of init, e.g.
 
 geninit features a small API intended for use by builders. These are base
 directory aware functions with error checking and are the recommended method of
-adding files to the cpio image from builders. Leading path componenets, if not
+adding files to the cpio image from builders. Leading path components, if not
 already created, will be added implicitly. If, for some reason, you need to
 override the base directory and specify a truly absolute path, you can prefix a
 source argument with a '@'.
@@ -168,7 +168,7 @@ also be added to the image.
 
 =item B<add_path_to_file> I<file>
 
-Add all leading path componenets to a file to the image.
+Add all leading path components to a file to the image.
 
 =item B<add_pipe> I<path> [I<mode>]
 
