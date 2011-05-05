@@ -478,11 +478,9 @@ fi
 # mktemp takes care of our error handling here
 tmpdir=$(readlink -e "$(mktemp -d "${otmpdir:-/tmp}"/${0##*/}.XXXXXX)") || cleanup 1
 
-# does the kernel exist inside the basedir?
+# does the kernel exist inside the basedir? we may need to resolve it...
 [[ $kern ]] && kernver=$(__get_kernver "$kern")
-if [[ -z $kernver ]]; then
-  die "Invalid kernel specifier: $kern"
-fi
+[[ $kernver ]] || die "Invalid kernel specifier: $kern"
 [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
 
 # is our supplied compression method (if supplied) valid?
