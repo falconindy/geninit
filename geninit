@@ -472,7 +472,10 @@ config=${config:-$baseconfig}
 # if specified, does the basedir exist? trim any trailing slash
 if [[ $basedir ]]; then
   basedir=${basedir%/}
-  [[ $basedir ]] && { [[ -d $basedir ]] || die "basedir \`$basedir' not found"; }
+
+  # if $basedir still exists (some noodle noggin might use -b /), make sure the
+  # dir can be resolved
+  [[ $basedir && ! -d $basedir ]] && die "basedir \`$basedir' not found"
 fi
 
 # mktemp takes care of our error handling here
