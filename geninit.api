@@ -169,6 +169,7 @@ add_pipe() { # {{{
 
   (( $# )) || return 1
 
+  add_path_to_file "$1"
   __add_pipe "$1" "${2:-644}"
 } # }}}
 
