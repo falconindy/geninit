@@ -16,7 +16,7 @@ tailor the image to the system's hardware and software needs.
 
 =over 4
 
-=item B<-b>
+=item B<-b> I<PATH>
 
 Specify a base directory other than /. This is reserved for usage during a
 chroot. geninit will attempt to use as much as possible from the guest system,
