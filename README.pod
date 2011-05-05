@@ -18,13 +18,13 @@ tailor the image to the system's hardware and software needs.
 
 =item B<-b> I<PATH>
 
-Specify a base directory other than /. This is reserved for usage during a
+Specify a base directory other than C</>. This is reserved for usage during a
 chroot. geninit will attempt to use as much as possible from the guest system,
 drawing only from the host system when necessary.
 
 =item B<-c> I<FILE>
 
-Use an alterate config file. Defaults to I</etc/geninit.conf>.
+Use an alterate config file. Defaults to C</etc/geninit.conf>.
 
 =item B<-g> I<PATH>
 
@@ -43,8 +43,8 @@ Display the help message and quit.
 =item B<-k> I<KERNEL>
 
 Specify an alternate kernel version to create an image for. The kernel can be
-specified as an exact version, or provided as a path to the kernel bzImage
-itself. By default, this is the currently loaded kernel.
+specified as an exact version (such as 2.6.38-ARCH), or provided as a path to
+the kernel bzImage itself. By default, this is the currently loaded kernel.
 
 =item B<-L>
 
@@ -54,7 +54,7 @@ file.
 =item B<-p> I<PRESET>
 
 Specify a preset file to drive image creation. This is any file named with a
-.preset extension in I</etc/geninit.d>. An example preset file is packaged
+.preset extension in C</etc/geninit.d>. An example preset file is packaged
 with geninit for explanatory purpose.
 
 =item B<-S> I<BUILDERS>
@@ -80,6 +80,98 @@ your method and choice and your kernel will not be checked for this support! If
 in doubt, gzip is a safe choice.
 
 =back
+
+=head1 EXAMPLES
+
+=over 4
+
+=item B<geninit>
+
+Perform a dry run against the currently loaded kernel. Although a temporary
+workspace is created, no bootable image is generated from this operation.
+
+=item B<geninit -k /boot/vmlinuz26 -g /boot/initramfs-ARCH>
+
+Create an image for the kernel located at C</boot/vmlinuz26> called
+C</boot/initramfs-ARCH>, described by the default config file.
+
+=item B<geninit -p kernel26>
+
+Build an image, or images, as described in C</etc/geninit.d/kernel26.preset>.
+
+=back
+
+=head1 BUILDER API
+
+geninit features a small API intended for usage by authors of builders. These
+are directory aware functions which error checking and are the preferred method
+of adding files to the cpio image from builders. If not already created, all
+functions will add leading path components to files and directories to the
+image for you. Builders should always be placed in C</usr/share/geninit/builders>.
+
+=over 4
+
+=item B<add_binary> I<source> [I<path>]
+
+Add a binary file, specified by the absolute path to its source. Unless specified,
+the path on the image will be the same as the source. Files will be scanned for
+library dependencies which will also be added to the image.
+
+=item B<add_dir> I<path> [I<mode>]
+
+Add a directory, specified by its absolute path on the image. Unless specified,
+the permissions of the directory will be 755.
+
+=item B<add_driver_classes> I<class>...
+
+Add one or more classifications of modules to the image, specified as a
+directory relative to C</lib/modules/KERNELVERSION/kernel>, e.g. 'drivers/scsi'
+or 'crypto'. Modules can be filtered by name by adding glob (including extended
+glob) patterns to the I<modulefilter> array prior to calling
+B<add_driver_classes>. This filter is cleared after the parsing of each hook,
+although you are free to call B<unset> from within the builder, if desired.
+
+Additionally, if the autodetect builder is used as part of image generation,
+only the intersection of the autodetect module list and the results of the
+add_driver_classes call will be added to the resulting image.
+
+=item B<add_file> I<source> [I<path>]
+
+Add a plain file, specified by the absolute path to its source. Unless
+specified, the path on the image will be the same as the source. No
+type checking of the file is done.
+
+=item B<add_module> I<module_name>
+
+Add a kernel module to the image, specified by its name (with or without
+extension). Modules will be scanned for dependencies which will also be
+added to the image.
+
+=item B<add_path_to_file> I<file>
+
+Add all leading path componenets to a file to the image.
+
+=item B<add_pipe> I<path> [I<mode>]
+
+Add a FIFO device to the image, specified by its absolute path. Unless
+specified, the permissions of the FIFO will be 644.
+
+=item B<add_symlink> I<target> I<link>
+
+Add a symlink to the image, located at the absolute path specified by link,
+pointing to the path specified by target.
+
+=item B<use_hookscript>
+
+Indicate that geninit should look to install a hook script with the same name
+as the builder to the image, to be run during bootstrap. Hook scripts should
+be located in C</usr/share/geninit/hooks>.
+
+=back
+
+=head1 SEE ALSO
+
+B<cpio>(1), B<initrd>(4)
 
 =head1 AUTHOR
 
