@@ -95,11 +95,29 @@ workspace is created, no bootable image is generated from this operation.
 Create an image for the kernel located at C</boot/vmlinuz26> called
 C</boot/initramfs-ARCH>, described by the default config file.
 
-=item B<geninit -p kernel26>
+=item B<geninit -b /mnt -p kernel26>
 
-Build an image, or images, as described in C</etc/geninit.d/kernel26.preset>.
+Build an image, or images, as described in C</mnt/etc/geninit.d/kernel26.preset>.
 
 =back
+
+=head1 BUILDERS
+
+Builders are bash scripts that are parsed during build time in order to add
+functionality to the image. They are sourced from the appropriate config file,
+and parsed B<in order>. Builders may draw in an additional hookscript for use
+at runtime.
+
+=head1 HOOKS
+
+Hooks are executed during the bootstrap process in order to facilitate finding
+and/or mounting of the root device. They run under Busybox's almquist shell.
+Because hooks are run as a child process of init, they are unable to directly
+export variables affecting their parent. If you need to communicate back with
+init, you may write environment variable declarations on file descriptor 3,
+which will be picked back up into the environment of init, e.g.
+
+  echo 'root=/dev/foo' >&3
 
 =head1 BUILDER API
 
@@ -107,7 +125,7 @@ geninit features a small API intended for usage by authors of builders. These
 are directory aware functions which error checking and are the preferred method
 of adding files to the cpio image from builders. If not already created, all
 functions will add leading path components to files and directories to the
-image for you. Builders should always be placed in C</usr/share/geninit/builders>.
+image for you.
 
 =over 4
 
@@ -164,8 +182,33 @@ and pointing to the path specified by target.
 =item B<use_hookscript>
 
 Indicate that geninit should look to install a hook script with the same name
-as the builder to the image, to be run during bootstrap. Hook scripts should
-be located in C</usr/share/geninit/hooks>.
+as the builder to the image, to be run during bootstrap.
+
+=back
+
+=head1 FILES AND DIRECTORIES
+
+=over 4
+
+=item C</etc/geninit.conf>
+
+Default config file
+
+=item C</etc/geninit.d>
+
+Location of geninit preset files
+
+=item C</usr/share/geninit/geninit.api>
+
+Builder API file
+
+=item C</usr/share/geninit/builders>
+
+Location of builders
+
+=item C</usr/share/geninit/hooks>
+
+Location of hookscripts
 
 =back
 
