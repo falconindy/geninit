@@ -33,18 +33,18 @@
 #define err(...) {fprintf(stderr, "error: " __VA_ARGS__);}
 #define die(...) {err(__VA_ARGS__); _exit(1);}
 
-#define STRING(x)     #x
+#define STRING(x)       #x
 
-#define CMDLINE_SIZE  257       /* 256 max cmdline len + NULL */
-#define TMPFS_FLAGS   MS_NOEXEC|MS_NODEV|MS_NOSUID
+#define CMDLINE_SIZE    257       /* 256 max cmdline len + NULL */
+#define TMPFS_FLAGS     MS_NOEXEC|MS_NODEV|MS_NOSUID
 
-#define CHILD_READ_FD 6
+#define CHILD_WRITE_FD  6
 
-#define NEWROOT       "/new_root"
-#define BUSYBOX       "/bin/busybox"
-#define UDEVD         "/sbin/udevd"
-#define UDEVADM       "/sbin/udevadm"
-#define MODPROBE      "/sbin/modprobe"
+#define NEWROOT         "/new_root"
+#define BUSYBOX         "/bin/busybox"
+#define UDEVD           "/sbin/udevd"
+#define UDEVADM         "/sbin/udevadm"
+#define MODPROBE        "/sbin/modprobe"
 
 int rootflags = 0;
 int quiet = 0;
@@ -320,8 +320,8 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
   if (pid == 0) {
     close(pfds[0]); /* unused by child */
 
-    /* child writes on CHILD_READ_FD will be received by the parent */
-    if (dup2(pfds[1], CHILD_READ_FD) == -1) {
+    /* child writes on CHILD_WRITE_FD will be received by the parent */
+    if (dup2(pfds[1], CHILD_WRITE_FD) == -1) {
       perror("dup2");
       _exit(errno);
     }
@@ -594,7 +594,7 @@ static void run_hooks(void) { /* {{{ */
 
         char *argv[] = { path, NULL };
 
-        /* writes to CHILD_READ_FD will read back and parsed as environment
+        /* writes to CHILD_WRITE_FD will read back and parsed as environment
          * variables. the return value is that of read(3). */
         if (read_child_response(argv, response) > 0) {
           parse_envstring(response);
