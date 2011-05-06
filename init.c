@@ -589,12 +589,8 @@ static void trigger_udev_events(void) { /* {{{ */
   struct timeval tv[2];
   long time_ms = 0; /* processing time in ms */
 
-  if (udevpid <= 0) { /* never had a chance... */
-    return;
-  }
-
-  if (kill(udevpid, 0) != 0) { /* is it still alive? */
-    udevpid = 1;
+  /* is udev alive? */
+  if (udevpid <= 0 || kill(udevpid, 0) != 0) {
     return;
   }
 
@@ -861,7 +857,7 @@ static void kill_udev(void) { /* {{{ */
    * pid = 1  : udev died at some point
    * pid > 1  : udevd is alive! */
 
-  if (udevpid <= 0) {
+  if (getenv("UDEVPID") == NULL) {
     return;
   }
 
