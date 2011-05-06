@@ -105,8 +105,15 @@ Build an image, or images, as described in C</mnt/etc/geninit.d/kernel26.preset>
 
 Builders are bash scripts that are parsed during build time in order to add
 functionality to the image. They are sourced from the appropriate config file,
-and parsed B<in order>. Builders may draw in an additional hookscript for use
-at runtime.
+and parsed in array index order. Builders may draw in an additional hookscript
+for use at runtime.
+
+At a minimum, builders must define a function called I<build>, which contains
+instructions on what geninit should add to the image. See the B<BUILDER API>
+section for documentation on the available methods for adding files.
+Additionally, a builder should also include a I<helpmsg> function, which
+describes the features and/or functionality provided by the builder. This is
+called via geninit's -H option.
 
 =head1 HOOKS
 
@@ -182,8 +189,8 @@ and pointing to the path specified by target.
 
 =item B<use_hookscript>
 
-Indicate that geninit should look to install a hook script with the same name
-as the builder to the image, to be run during bootstrap.
+Indicate that geninit should look to include, on the image, a script by the
+same name as the builder, to be run during bootstrap.
 
 =back
 
