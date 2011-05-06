@@ -62,6 +62,6 @@ dist:
 .PHONY:
 
 clean:
-	${RM} init.o init
+	${RM} init.o init geninit.8
 .PHONY: clean
 

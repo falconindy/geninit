@@ -60,27 +60,27 @@ declare skipbuilders=
 
 plain() { # {{{
   local mesg=$1; shift
-  printf "${BOLD}    ${mesg}${ALL_OFF}\n" "$@" >&2
+  printf "$BOLD    $mesg$NC\n" "$@" >&2
 } # }}}
 
 msg() { # {{{
-	local mesg=$1; shift
-	printf "${GREEN}==>${NC}${BOLD} ${mesg}${NC}\n" "$@" >&2
+  local mesg=$1; shift
+  printf "$GREEN==>$NC$BOLD $mesg$NC\n" "$@" >&2
 } # }}}
 
 msg2() { # {{{
-	local mesg=$1; shift
-	printf "${BLUE}  ->${NC}${BOLD} ${mesg}${NC}\n" "$@" >&2
+  local mesg=$1; shift
+  printf "$BLUE  ->$NC$BOLD $mesg$NC\n" "$@" >&2
 } # }}}
 
 warning() { # {{{
-	local mesg=$1; shift
-	printf "${YELLOW}==> $(gettext "WARNING:")${NC}${BOLD} ${mesg}${NC}\n" "$@" >&2
+  local mesg=$1; shift
+  printf "$YELLOW==> WARNING:$NC$BOLD $mesg$NC\n" "$@" >&2
 } # }}}
 
 error() { # {{{
-	local mesg=$1; shift
-	printf "${RED}==> $(gettext "ERROR:")${NC}${BOLD} ${mesg}${NC}\n" "$@" >&2
+  local mesg=$1; shift
+  printf "$RED==> ERROR:$NC$BOLD $mesg$NC\n" "$@" >&2
 } # }}}
 
 die() { # {{{
@@ -434,17 +434,17 @@ if [[ -t 2 ]] && (( color )); then
   if tput setaf 0 &>/dev/null; then
     NC="$(tput sgr0)"
     BOLD="$(tput bold)"
-    BLUE="${BOLD}$(tput setaf 4)"
-    GREEN="${BOLD}$(tput setaf 2)"
-    RED="${BOLD}$(tput setaf 1)"
-    YELLOW="${BOLD}$(tput setaf 3)"
+    BLUE="$BOLD$(tput setaf 4)"
+    GREEN="$BOLD$(tput setaf 2)"
+    RED="$BOLD$(tput setaf 1)"
+    YELLOW="$BOLD$(tput setaf 3)"
   else
     NC="\e[1;0m"
     BOLD="\e[1;1m"
-    BLUE="${BOLD}\e[1;34m"
-    GREEN="${BOLD}\e[1;32m"
-    RED="${BOLD}\e[1;31m"
-    YELLOW="${BOLD}\e[1;33m"
+    BLUE="$BOLD\e[1;34m"
+    GREEN="$BOLD\e[1;32m"
+    RED="$BOLD\e[1;31m"
+    YELLOW="$BOLD\e[1;33m"
   fi
 fi
 readonly NC BOLD BLUE GREEN RED YELLOW
