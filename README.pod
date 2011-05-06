@@ -189,9 +189,8 @@ and pointing to the path specified by target.
 
 =item B<use_hookscript> [I<script>]
 
-Indicate that geninit should a script by the to be run during bootstrap.
-Unless specified, geninit will look for a script by the same name as the
-builder.
+Indicate that a script should be added to be run during bootstrap. Unless
+specified, geninit will look for a script by the same name as the builder.
 
 =back
 
