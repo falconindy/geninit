@@ -121,10 +121,10 @@ Hooks are executed during the bootstrap process in order to facilitate finding
 and/or mounting of the root device. They run under Busybox's almquist shell.
 Because hooks are run as a child process of init, they are unable to directly
 export variables affecting their parent. If you need to communicate back with
-init, you may write environment variable declarations on file descriptor 3,
+init, you may write environment variable declarations on file descriptor 6,
 which will be picked back up into the environment of init, e.g.
 
-  echo 'root=/dev/foo' >&3
+  echo 'root=/dev/foo' >&6
 
 =head1 BUILDER API
 

@@ -36,6 +36,8 @@
 #define CMDLINE_SIZE  257       /* 256 max cmdline len + NULL */
 #define TMPFS_FLAGS   MS_NOEXEC|MS_NODEV|MS_NOSUID
 
+#define CHILD_READ_FD 6
+
 #define NEWROOT       "/new_root"
 #define BUSYBOX       "/bin/busybox"
 #define UDEVD         "/sbin/udevd"
@@ -314,8 +316,8 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
   if (pid == 0) {
     close(pfds[0]); /* unused by child */
 
-    /* child writes on FD 3 will be received by the parent */
-    if (dup2(pfds[1], 3) == -1) {
+    /* child writes on CHILD_READ_FD will be received by the parent */
+    if (dup2(pfds[1], CHILD_READ_FD) == -1) {
       perror("dup2");
       _exit(errno);
     }
