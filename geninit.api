@@ -176,9 +176,15 @@ add_pipe() { # {{{
 use_hookscript() { # {{{
   # specifies that a builder should install a hookscript
   # "$builder" comes from the builder parsing loop in main
+  #   $1: script name (optional, defaults to the name of the builder)
+  local script=${1:-$builder}
 
-  [[ $builder ]] || return 1
-  __add_file "$basedir$_sharedir/hooks/$builder" "/hooks/$builder" 755
+  if [[ ! -f $basedir$_sharedir/hooks/$script ]]; then
+    error "unable to find hook script: $script"
+    return 1
+  fi
+
+  __add_file "$basedir$_sharedir/hooks/$script" "/hooks/$script" 755
 } # }}}
 
 add_driver_classes() { # {{{

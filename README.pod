@@ -187,10 +187,11 @@ specified, the permissions of the FIFO will be 644.
 Add a symlink to the image, located at the absolute path specified by link,
 and pointing to the path specified by target.
 
-=item B<use_hookscript>
+=item B<use_hookscript> [I<script>]
 
-Indicate that geninit should look to include, on the image, a script by the
-same name as the builder, to be run during bootstrap.
+Indicate that geninit should a script by the to be run during bootstrap.
+Unless specified, geninit will look for a script by the same name as the
+builder.
 
 =back
 
