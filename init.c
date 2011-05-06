@@ -33,6 +33,8 @@
 #define err(...) {fprintf(stderr, "error: " __VA_ARGS__);}
 #define die(...) {err(__VA_ARGS__); _exit(1);}
 
+#define STRING(x)     #x
+
 #define CMDLINE_SIZE  257       /* 256 max cmdline len + NULL */
 #define TMPFS_FLAGS   MS_NOEXEC|MS_NODEV|MS_NOSUID
 
@@ -585,6 +587,7 @@ static void run_hooks(void) { /* {{{ */
 
         /* lazily install symlinks */
         if (!bbox_installed) {
+          setenv("FDINIT", STRING(CHILD_WRITE_FD), 1);
           forkexecwait(bboxinstall);
           bbox_installed = 1;
         }
