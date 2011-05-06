@@ -1,0 +1,33 @@
+#!/bin/busybox ash
+
+msg() {
+  local fmt=$1; shift
+
+  [ -n "$quiet" ] || printf ":: $fmt\n"  "$@"
+}
+
+err() {
+  local fmt=$1; shift
+
+  printf "error: $fmt\n" "$@"
+}
+
+poll_device() {
+  local device=$1 seconds=${2:-5}
+
+  if [ -n "$UDEVPID" ]; then
+    msg "Waiting %s seconds for device %s..." "$seconds" "$device"
+    while [ ! -b "$device" ] && [ $seconds -gt 0 ]; do
+      sleep 1
+      seconds=$(( seconds - 1 ))
+    done
+  fi
+
+  [ -b "$device" ]
+}
+
+initexport() {
+  printf '%s\n' "$*" >&$FDINIT
+}
+
+# vim: set et sw=2 ft=sh:
