@@ -1,12 +1,12 @@
 #!/bin/bash
 
 build() {
-  add_file "/lib/initcpio/custom.dsdt" "/DSDT.aml"
+  add_file "/usr/share/geninit/custom.dsdt" "/DSDT.aml"
 }
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads a custom acpi dsdt file during boot. Place your custom dsdt
+  This hook loads a custom ACPI dsdt file during boot. Place your custom dsdt
   file for inclusion in: /usr/share/geninit/custom.dsdt
 HELPEOF
 }
