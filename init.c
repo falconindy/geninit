@@ -46,6 +46,7 @@
 
 int rootflags = 0;
 int quiet = 0;
+int bbox_installed = 0;
 pid_t udevpid = 0;
 
 /* utility */
@@ -176,15 +177,16 @@ static void delete_contents(char *path, dev_t rootdev) { /* {{{ */
 } /* }}} */
 
 static void start_rescue_shell(void) { /* {{{ */
-  static char *bboxinstall[] = { BUSYBOX, "--install", NULL };
-  static char *bboxlaunch[] = { BUSYBOX, "ash", NULL };
+  char *bboxinstall[] = { BUSYBOX, "--install", NULL };
+  char *bboxlaunch[] = { BUSYBOX, "ash", NULL };
 
   if (access(BUSYBOX, X_OK) != 0) {
     return;
   }
 
-  /* install symlinks */
-  forkexecwait(bboxinstall);
+  if (!bbox_installed) {
+    forkexecwait(bboxinstall);
+  }
 
   /* set a prompt */
   putenv("PS1=[ramfs \\W]\\$ ");
@@ -420,7 +422,7 @@ static void disable_modules(void) { /* {{{ */
 } /* }}} */
 
 static void launch_udev(void) { /* {{{ */
-  static char *argv[] = { UDEVD, "--resolve-names=never", NULL };
+  char *argv[] = { UDEVD, "--resolve-names=never", NULL };
 
   if (access(UDEVD, X_OK) != 0) {
     return;
@@ -560,6 +562,7 @@ static void disable_hooks(void) { /* {{{ */
 } /* }}} */
 
 static void run_hooks(void) { /* {{{ */
+  char *bboxinstall[] = { BUSYBOX, "--install", NULL };
   FILE *fp;
   char line[PATH_MAX];
   char *hook;
@@ -580,10 +583,16 @@ static void run_hooks(void) { /* {{{ */
           continue;
         }
 
+        /* lazily install symlinks */
+        if (!bbox_installed) {
+          forkexecwait(bboxinstall);
+          bbox_installed = 1;
+        }
+
         char *argv[] = { path, NULL };
 
-        /* anything written on fd 3 by the child, we'll read back and parse as
-         * environment. read_child_response will return the value from read(3) */
+        /* writes to CHILD_READ_FD will read back and parsed as environment
+         * variables. the return value is that of read(3). */
         if (read_child_response(argv, response) > 0) {
           parse_envstring(response);
         }
