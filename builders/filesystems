@@ -1,7 +1,7 @@
 #!/bin/bash
 
 build() {
-  modulefilter=('nls_*')
+  MODFILTER=('nls_*')
   add_driver_classes fs
 }
 

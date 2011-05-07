@@ -33,7 +33,7 @@
 #define err(...) {fprintf(stderr, "error: " __VA_ARGS__);}
 #define die(...) {err(__VA_ARGS__); _exit(1);}
 
-#define STRING(x)       #x
+#define QUOTE(x)        #x
 
 #define CMDLINE_SIZE    257       /* 256 max cmdline len + NULL */
 #define TMPFS_FLAGS     MS_NOEXEC|MS_NODEV|MS_NOSUID
@@ -517,6 +517,7 @@ static void load_extra_modules(void) { /* {{{ */
 } /* }}} */
 
 static void trigger_udev_events(void) { /* {{{ */
+  char buffer[8];
   struct timeval tv[2];
   long time_ms = 0; /* processing time in ms */
 
@@ -528,6 +529,10 @@ static void trigger_udev_events(void) { /* {{{ */
     udevpid = 1;
     return;
   }
+
+  /* drop udev's pid into the environment for children to use */
+  snprintf(buffer, 8, "%d", udevpid);
+  setenv("UDEVPID", buffer, 1);
 
   msg("triggering uevents...\n");
 
@@ -587,7 +592,7 @@ static void run_hooks(void) { /* {{{ */
 
         /* lazily install symlinks */
         if (!bbox_installed) {
-          setenv("FDINIT", STRING(CHILD_WRITE_FD), 1);
+          setenv("FDINIT", QUOTE(CHILD_WRITE_FD), 1);
           forkexecwait(bboxinstall);
           bbox_installed = 1;
         }
@@ -815,6 +820,8 @@ static int switch_root(char *argv[]) { /* {{{ */
 } /* }}} */
 
 int main(int argc, char *argv[]) {
+  char *term;
+
   (void)argc; /* poor unloved argc */
 
   mount_setup();                /* create early tmpfs mountpoints */
@@ -849,7 +856,14 @@ int main(int argc, char *argv[]) {
   movemount("/run", NEWROOT "/run");
   movemount("/dev", NEWROOT "/dev");
 
+  /* save these... */
   argv[0] = getenv("init");
+  term = getenv("TERM");
+
+  /* purge the environment */
+  clearenv();
+  setenv("TERM", term, 1);
+
   switch_root(argv);
   /* unreached */
   return 0;
