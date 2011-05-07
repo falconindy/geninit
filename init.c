@@ -517,6 +517,7 @@ static void load_extra_modules(void) { /* {{{ */
 } /* }}} */
 
 static void trigger_udev_events(void) { /* {{{ */
+  char buffer[8];
   struct timeval tv[2];
   long time_ms = 0; /* processing time in ms */
 
@@ -528,6 +529,10 @@ static void trigger_udev_events(void) { /* {{{ */
     udevpid = 1;
     return;
   }
+
+  /* drop udev's pid into the environment for children to use */
+  snprintf(buffer, 8, "%d", udevpid);
+  setenv("UDEVPID", buffer, 1);
 
   msg("triggering uevents...\n");
 
