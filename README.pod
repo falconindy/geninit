@@ -154,7 +154,7 @@ the permissions of the directory will be 755.
 Add one or more classifications of modules to the image, specified as a
 directory relative to C</lib/modules/KERNELVERSION/kernel>, e.g. 'drivers/scsi'
 or 'crypto'. Modules can be filtered by name by adding glob (including extended
-glob) patterns to the I<modulefilter> array prior to calling
+glob) patterns to the I<MODFILTER> array prior to calling
 B<add_driver_classes>. This filter is cleared after the parsing of each hook,
 although you are free to call B<unset> from within the builder, if desired.
 
