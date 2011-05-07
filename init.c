@@ -820,6 +820,8 @@ static int switch_root(char *argv[]) { /* {{{ */
 } /* }}} */
 
 int main(int argc, char *argv[]) {
+  char *term;
+
   (void)argc; /* poor unloved argc */
 
   mount_setup();                /* create early tmpfs mountpoints */
@@ -854,7 +856,14 @@ int main(int argc, char *argv[]) {
   movemount("/run", NEWROOT "/run");
   movemount("/dev", NEWROOT "/dev");
 
+  /* save these... */
   argv[0] = getenv("init");
+  term = getenv("TERM");
+
+  /* purge the environment */
+  clearenv();
+  setenv("TERM", term, 1);
+
   switch_root(argv);
   /* unreached */
   return 0;
