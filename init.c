@@ -181,7 +181,8 @@ static void delete_contents(char *path, dev_t rootdev) { /* {{{ */
 
 static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
   int statloc, pfds[2];
-  ssize_t len;
+  ssize_t total, len;
+  char readbuf[BUFSIZ];
   pid_t pid;
 
   if (pipe(pfds) != 0) {
@@ -214,8 +215,28 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
 
   close(pfds[1]); /* unused by parent */
 
-  memset(buffer, 0, CMDLINE_SIZE);
-  len = read(pfds[0], buffer, CMDLINE_SIZE);
+  total = 0;
+  memset(buffer, 0, BUFSIZ);
+  while (1) {
+    len = read(pfds[0], readbuf, BUFSIZ);
+    if (len <= 0 && errno != EINTR) {
+      break;
+    }
+
+    if (total + len > BUFSIZ) { /* overflow! */
+      /* this is a ridiculous condition. the user just tried to write an absurd
+       * amount of data to init. if this wasn't an accident, i either messed up,
+       * or i hate the user. */
+      err("buffer overflow detected while writing to init! input may be truncated!");
+
+      /* write what we can to the buffer and get out */
+      memcpy(&buffer[total], readbuf, BUFSIZ - total - 1);
+      break;
+    }
+
+    memcpy(&buffer[total], readbuf, len);
+    total += len;
+  }
   close(pfds[0]);
 
   waitpid(pid, &statloc, 0);
@@ -223,7 +244,7 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
     err("hook `%s' exited with status %d\n", argv[0], WEXITSTATUS(statloc));
   }
 
-  return len;
+  return total;
 } /* }}} */
 
 static void parse_envstring(char *envstring) { /* {{{ */
@@ -292,7 +313,7 @@ static void parse_envstring(char *envstring) { /* {{{ */
 static void start_rescue_shell(void) { /* {{{ */
   char *bboxinstall[] = { BUSYBOX, "--install", NULL };
   char *bboxlaunch[] = { BUSYBOX, "ash", NULL };
-  char buffer[CMDLINE_SIZE];
+  char buffer[BUFSIZ];
 
   if (access(BUSYBOX, X_OK) != 0) {
     return;
