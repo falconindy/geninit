@@ -338,9 +338,9 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
 
   memset(buffer, 0, CMDLINE_SIZE);
   len = read(pfds[0], buffer, CMDLINE_SIZE);
-  waitpid(pid, &statloc, 0);
   close(pfds[0]);
 
+  waitpid(pid, &statloc, 0);
   if (WIFEXITED(statloc) && WEXITSTATUS(statloc) != 0) {
     err("hook `%s' exited with status %d\n", argv[0], WEXITSTATUS(statloc));
   }
