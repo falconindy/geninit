@@ -165,7 +165,7 @@ __get_kernver() { # {{{
 
   [[ -r $kernel ]] || return $ENOENT
 
-  read _ kernver < <(file -b $kernel | grep -o 'version [^ ]\+')
+  read _ kernver < <(file -b $basedir$kernel | grep -o 'version [^ ]\+')
   if [[ $kernver ]]; then
     echo "$kernver"
     return 0
