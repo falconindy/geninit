@@ -467,6 +467,19 @@ readonly NC BOLD BLUE GREEN RED YELLOW
 ##  sanity checks  ##
 # ----------------- #
 
+# if specified, does the basedir exist? trim any trailing slash
+if [[ $basedir ]]; then
+  basedir=${basedir%/}
+
+  # if $basedir still exists (some noodle noggin might use -b /), make sure the
+  # dir can be resolved
+  [[ $basedir && ! -d $basedir ]] && die "basedir \`$basedir' not found"
+fi
+
+# make sure our config exists, and source it
+config=${config:-$baseconfig}
+[[ ! -f $basedir$config ]] && die "failed to find config file: \`$basedir$config'" || . "$basedir$config"
+
 # declared as an array to force expansion. we have to be careful that the wrong
 # linker isn't picked for mulitlib systems, so we branch on $carch.
 case $carch in
@@ -477,19 +490,6 @@ esac
 
 if (( ${#ld_so[*]} != 1 )); then # uh oh...
   die "failed to resolve the location of /lib/ld.so. Please report this bug."
-fi
-
-# make sure our config exists, and source it
-config=${config:-$baseconfig}
-[[ ! -f $config ]] && die "failed to find config file: \`$config'" || . "$config"
-
-# if specified, does the basedir exist? trim any trailing slash
-if [[ $basedir ]]; then
-  basedir=${basedir%/}
-
-  # if $basedir still exists (some noodle noggin might use -b /), make sure the
-  # dir can be resolved
-  [[ $basedir && ! -d $basedir ]] && die "basedir \`$basedir' not found"
 fi
 
 # mktemp takes care of our error handling here
