@@ -184,7 +184,7 @@ use_hookscript() { # {{{
     return 1
   fi
 
-  __add_file "$basedir$_sharedir/hooks/$script" "/hooks/$script" 755
+  __add_file "/hooks/$script" "$basedir$_sharedir/hooks/$script" 755
 } # }}}
 
 add_driver_classes() { # {{{
