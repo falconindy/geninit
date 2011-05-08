@@ -463,6 +463,11 @@ if [[ -t 2 ]] && (( color )); then
 fi
 readonly NC BOLD BLUE GREEN RED YELLOW
 
+if [[ $preset ]]; then
+  __build_preset "$preset"
+  exit $?
+fi
+
 # ----------------- #
 ##  sanity checks  ##
 # ----------------- #
@@ -534,11 +539,7 @@ if (( automods )); then
   cleanup 0
 fi
 
-if [[ $preset ]]; then
-  __build_preset "$preset"
-else
-  __build_image
-fi
+__build_image
 
 cleanup $?
 
