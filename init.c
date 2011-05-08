@@ -34,6 +34,7 @@
 #define die(...) {err(__VA_ARGS__); _exit(1);}
 
 #define QUOTE(x)        #x
+#define TOSTRING(x)     QUOTE(x)
 
 #define CMDLINE_SIZE    257       /* 256 max cmdline len + NULL */
 #define TMPFS_FLAGS     MS_NOEXEC|MS_NODEV|MS_NOSUID
@@ -592,7 +593,7 @@ static void run_hooks(void) { /* {{{ */
 
         /* lazily install symlinks */
         if (!bbox_installed) {
-          setenv("FDINIT", QUOTE(CHILD_WRITE_FD), 1);
+          setenv("FDINIT", TOSTRING(CHILD_WRITE_FD), 1);
           forkexecwait(bboxinstall);
           bbox_installed = 1;
         }
