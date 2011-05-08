@@ -1,0 +1,14 @@
+#!/bin/bash
+
+build() {
+  add_driver_classes drivers/virtio && add_module virtio_blk
+}
+
+helpmsg() {
+  cat<<HELPEOF
+  This builder provides the appropriate modules for a QEMU guest using a virtio
+  block device as the root.
+HELPEOF
+}
+
+# vim: set et ts=2 sw=2:
