@@ -226,7 +226,7 @@ __add_slink() { # {{{
 __build_image() { # {{{
   local -a zopts pipesave
   local -i errors=0
-  local builder= module= line= mod= file=
+  local builder= module= line= mod= file= errmsg=
 
   # check our kernel version
   [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
@@ -311,16 +311,25 @@ __build_image() { # {{{
   msg "Creating$([[ $compress == cat ]] || printf " $compress") initramfs: $imagename"
 
   pushd "$buildroot" &>/dev/null
-  find . -print0 | cpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename"
+  find . -print0 | cpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename.tmp"
   pipesave=("${PIPESTATUS[@]}") # save immediately
   popd &>/dev/null
 
-  (( pipesave[0] )) && die "failed to create filelist (find reported error)"
-  (( pipesave[1] )) && die "failed to create cpio archive (cpio reported error)"
-  (( pipesave[2] )) && die "$compress reported error compressing image"
+  (( pipesave[0] )) && errmsg="failed to create filelist (find reported error)"
+  (( pipesave[1] )) && errmsg="failed to create cpio archive (cpio reported error)"
+  (( pipesave[2] )) && errmsg="$compress reported error compressing image"
 
-  msg "Image creation completed successfully"
-  (( errors )) && warning "Errors were encountered during creation. The image may not be complete."
+  # check for fatal errors
+  [[ $errmsg ]] && { rm "$imagename.tmp"; die "$errmsg"; }
+
+  # less than fatal errors
+  if (( !errors )); then
+    msg "Image creation completed successfully"
+  else
+    warning "Errors were encountered during creation. The image may not be complete."
+  fi
+
+  mv "$imagename"{.tmp,}
 
   return 0 # ignore error when (( errors )) evalutes to false
 } # }}}
