@@ -12,7 +12,7 @@ build() {
     sort -u >>"$autodetect_cache"
 
   if (( UID == 0 )) || [[ $(groups) == *disk* ]]; then
-    if ! findmnt -uno fstype / >>"$autodetect_cache"; then
+    if ! findmnt -uno fstype ${basedir:-/} >>"$autodetect_cache"; then
       err "failed to detect root filesystem"
     fi
 
