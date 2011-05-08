@@ -165,7 +165,7 @@ __get_kernver() { # {{{
 
   [[ -r $kernel ]] || return $ENOENT
 
-  read _ kernver < <(file -b $kernel | grep -o 'version [^ ]\+')
+  read _ kernver < <(file -b $basedir$kernel | grep -o 'version [^ ]\+')
   if [[ $kernver ]]; then
     echo "$kernver"
     return 0
@@ -226,13 +226,18 @@ __add_slink() { # {{{
 __build_image() { # {{{
   local -a zopts pipesave
   local -i errors=0
-  local builder= module= line= mod= file=
+  local builder= module= line= mod= file= errmsg=
+
+  # check our kernel version
+  [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
 
   # this must be resolved to an absolute path
   if [[ $imagename && ${imagename:0:1} != / ]]; then
     imagename=$(readlink -f "$imagename")
     [[ $imagename ]] || die "Failed to resolve path to imagename"
   fi
+
+  (( dryrun )) && msg "Starting dry run: %s" "$kernver" || msg "Starting build: %s" "$kernver"
 
   # we always need the linker
   file=$(readlink -e "$ld_so")
@@ -306,16 +311,25 @@ __build_image() { # {{{
   msg "Creating$([[ $compress == cat ]] || printf " $compress") initramfs: $imagename"
 
   pushd "$buildroot" &>/dev/null
-  find . -print0 | cpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename"
+  find . -print0 | cpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename.tmp"
   pipesave=("${PIPESTATUS[@]}") # save immediately
   popd &>/dev/null
 
-  (( pipesave[0] )) && die "failed to create filelist (find reported error)"
-  (( pipesave[1] )) && die "failed to create cpio archive (cpio reported error)"
-  (( pipesave[2] )) && die "$compress reported error compressing image"
+  (( pipesave[0] )) && errmsg="failed to create filelist (find reported error)"
+  (( pipesave[1] )) && errmsg="failed to create cpio archive (cpio reported error)"
+  (( pipesave[2] )) && errmsg="$compress reported error compressing image"
 
-  msg "Image creation completed successfully"
-  (( errors )) && warning "Errors were encountered during creation. The image may not be complete."
+  # check for fatal errors
+  [[ $errmsg ]] && { rm "$imagename.tmp"; die "$errmsg"; }
+
+  # less than fatal errors
+  if (( !errors )); then
+    msg "Image creation completed successfully"
+  else
+    warning "Errors were encountered during creation. The image may not be complete."
+  fi
+
+  mv "$imagename"{.tmp,}
 
   return 0 # ignore error when (( errors )) evalutes to false
 } # }}}
@@ -449,9 +463,27 @@ if [[ -t 2 ]] && (( color )); then
 fi
 readonly NC BOLD BLUE GREEN RED YELLOW
 
+if [[ $preset ]]; then
+  __build_preset "$preset"
+  exit $?
+fi
+
 # ----------------- #
 ##  sanity checks  ##
 # ----------------- #
+
+# if specified, does the basedir exist? trim any trailing slash
+if [[ $basedir ]]; then
+  basedir=${basedir%/}
+
+  # if $basedir still exists (some noodle noggin might use -b /), make sure the
+  # dir can be resolved
+  [[ $basedir && ! -d $basedir ]] && die "basedir \`$basedir' not found"
+fi
+
+# make sure our config exists, and source it
+config=${config:-$baseconfig}
+[[ ! -f $basedir$config ]] && die "failed to find config file: \`$basedir$config'" || . "$basedir$config"
 
 # declared as an array to force expansion. we have to be careful that the wrong
 # linker isn't picked for mulitlib systems, so we branch on $carch.
@@ -465,26 +497,12 @@ if (( ${#ld_so[*]} != 1 )); then # uh oh...
   die "failed to resolve the location of /lib/ld.so. Please report this bug."
 fi
 
-# make sure our config exists, and source it
-config=${config:-$baseconfig}
-[[ ! -f $config ]] && die "failed to find config file: \`$config'" || . "$config"
-
-# if specified, does the basedir exist? trim any trailing slash
-if [[ $basedir ]]; then
-  basedir=${basedir%/}
-
-  # if $basedir still exists (some noodle noggin might use -b /), make sure the
-  # dir can be resolved
-  [[ $basedir && ! -d $basedir ]] && die "basedir \`$basedir' not found"
-fi
-
 # mktemp takes care of our error handling here
 tmpdir=$(readlink -e "$(mktemp -d "${otmpdir:-/tmp}"/${0##*/}.XXXXXX)") || cleanup 1
 
 # does the kernel exist inside the basedir? we may need to resolve it...
 [[ $kern ]] && kernver=$(__get_kernver "$kern")
 [[ $kernver ]] || die "Invalid kernel specifier: $kern"
-[[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
 
 # is our supplied compression method (if supplied) valid?
 compress=${ocompress:-$compress}
@@ -521,12 +539,7 @@ if (( automods )); then
   cleanup 0
 fi
 
-if [[ $preset ]]; then
-  __build_preset "$preset"
-else
-  (( dryrun )) && msg "Starting dry run: %s" "$kernver" || msg "Starting build: %s" "$kernver"
-  __build_image
-fi
+__build_image
 
 cleanup $?
 

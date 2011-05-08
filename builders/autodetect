@@ -12,12 +12,12 @@ build() {
     sort -u >>"$autodetect_cache"
 
   if (( UID == 0 )) || [[ $(groups) == *disk* ]]; then
-    if ! findmnt -uno fstype / >>"$autodetect_cache"; then
+    if ! findmnt -uno fstype ${basedir:-/} >>"$autodetect_cache"; then
       err "failed to detect root filesystem"
     fi
 
     if [[ -x /sbin/mdadm ]]; then
-      /sbin/mdadm -Esv /dev/hd* /dev/sd* /dev/rd/* /dev/ida/* /dev/cciss/* /dev/ataraid/* /dev/mapper/* |\
+      /sbin/mdadm -Esv /dev/[rhs]d* /dev/ida/* /dev/cciss/* /dev/ataraid/* /dev/mapper/* |\
         sed -n 's/.*level=\([^ ]\+\) .*/\1/p' |\
         sed 's/\<raid[456]\>/raid456/g' | sort -u >>"$autodetect_cache"
     fi

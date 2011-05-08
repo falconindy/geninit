@@ -143,7 +143,7 @@ add_binary() { # {{{
   __add_file "${dest#$basedir}" "${binary#$basedir}" 755 || return 1
 
   # resolve sodeps
-  regex='.+ => (.*) \(.*\)'
+  regex='^[[:space:]]*[^/].+ => (.*) \(.*\)'
   while read line; do
     [[ $line =~ $regex ]] && sodep="${BASH_REMATCH[1]}" || continue
 
@@ -184,7 +184,7 @@ use_hookscript() { # {{{
     return 1
   fi
 
-  __add_file "$basedir$_sharedir/hooks/$script" "/hooks/$script" 755
+  __add_file "/hooks/$script" "$basedir$_sharedir/hooks/$script" 755
 } # }}}
 
 add_driver_classes() { # {{{
