@@ -746,7 +746,8 @@ static int set_init(void) { /* {{{ */
 static void kill_udev(void) { /* {{{ */
   /* pid = 0  : we never attempted to start udev
    * pid = -1 : udev fork failed
-   * pid = 1  : udev died at some point */
+   * pid = 1  : udev died at some point
+   * pid > 1  : udevd is alive! */
 
   if (udevpid <= 0) {
     return;
