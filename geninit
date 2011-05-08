@@ -228,11 +228,16 @@ __build_image() { # {{{
   local -i errors=0
   local builder= module= line= mod= file=
 
+  # check our kernel version
+  [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
+
   # this must be resolved to an absolute path
   if [[ $imagename && ${imagename:0:1} != / ]]; then
     imagename=$(readlink -f "$imagename")
     [[ $imagename ]] || die "Failed to resolve path to imagename"
   fi
+
+  (( dryrun )) && msg "Starting dry run: %s" "$kernver" || msg "Starting build: %s" "$kernver"
 
   # we always need the linker
   file=$(readlink -e "$ld_so")
@@ -484,7 +489,6 @@ tmpdir=$(readlink -e "$(mktemp -d "${otmpdir:-/tmp}"/${0##*/}.XXXXXX)") || clean
 # does the kernel exist inside the basedir? we may need to resolve it...
 [[ $kern ]] && kernver=$(__get_kernver "$kern")
 [[ $kernver ]] || die "Invalid kernel specifier: $kern"
-[[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
 
 # is our supplied compression method (if supplied) valid?
 compress=${ocompress:-$compress}
@@ -524,7 +528,6 @@ fi
 if [[ $preset ]]; then
   __build_preset "$preset"
 else
-  (( dryrun )) && msg "Starting dry run: %s" "$kernver" || msg "Starting build: %s" "$kernver"
   __build_image
 fi
 
