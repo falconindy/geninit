@@ -179,64 +179,51 @@ static void delete_contents(char *path, dev_t rootdev) { /* {{{ */
   }
 } /* }}} */
 
-static void start_rescue_shell(void) { /* {{{ */
-  char *bboxinstall[] = { BUSYBOX, "--install", NULL };
-  char *bboxlaunch[] = { BUSYBOX, "ash", NULL };
+static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
+  int statloc, pfds[2];
+  ssize_t len;
+  pid_t pid;
 
-  if (access(BUSYBOX, X_OK) != 0) {
-    return;
+  if (pipe(pfds) != 0) {
+    perror("pipe");
+    return errno;
   }
 
-  if (!bbox_installed) {
-    forkexecwait(bboxinstall);
+  pid = fork();
+  if (pid < 0) {
+    perror("fork");
+    return errno;
   }
 
-  /* set a prompt */
-  putenv("PS1=[ramfs \\W]\\$ ");
+  if (pid == 0) {
+    close(pfds[0]); /* unused by child */
 
-  /* start the shell */
-  forkexecwait(bboxlaunch);
+    /* child writes on CHILD_WRITE_FD will be received by the parent */
+    if (dup2(pfds[1], CHILD_WRITE_FD) == -1) {
+      perror("dup2");
+      _exit(errno);
+    }
 
-} /* }}} */
+    /* now redundant */
+    close(pfds[1]);
 
-static char *probe_fstype(const char *devname) { /* {{{ */
-  int ret;
-  char *fstype;
-  blkid_probe pr;
-
-  pr = blkid_new_probe_from_filename(devname);
-  if (!pr) {
-    err("%s: failed to create a new libblkid probe\n", devname);
-    return NULL;
+    execv(argv[0], argv);
+    fprintf(stderr, "exec: %s: %s", argv[0], strerror(errno));
+    _exit(errno);
   }
 
-  blkid_probe_enable_superblocks(pr, 1);
-  blkid_probe_set_superblocks_flags(pr, BLKID_SUBLKS_TYPE);
+  close(pfds[1]); /* unused by parent */
 
-  ret = blkid_do_safeprobe(pr);
-  if (ret == -1) {
-    return NULL;
-  } else if (ret == 1) {
-    err("failed to probe device %s\n", devname);
-    return NULL;
-  } else {
-    const char *name, *data;
-    blkid_probe_get_value(pr, 0, &name, &data, NULL);
-    fstype = strdup(data);
+  memset(buffer, 0, CMDLINE_SIZE);
+  len = read(pfds[0], buffer, CMDLINE_SIZE);
+  close(pfds[0]);
+
+  waitpid(pid, &statloc, 0);
+  if (WIFEXITED(statloc) && WEXITSTATUS(statloc) != 0) {
+    err("hook `%s' exited with status %d\n", argv[0], WEXITSTATUS(statloc));
   }
 
-  blkid_free_probe(pr);
-
-  return fstype;
-} /* }}} */
-
-static void movemount(const char *src, const char *dest) { /* {{{ */
-  /* move the mount if it exists on the real root, otherwise get rid of it */
-  if (access(dest, F_OK) == 0) {
-    mount(src, dest, NULL, MS_MOVE,  NULL);
-  } else {
-    umount2(src, MNT_DETACH);
-  }
+  return len;
 } /* }}} */
 
 static void parse_envstring(char *envstring) { /* {{{ */
@@ -302,51 +289,67 @@ static void parse_envstring(char *envstring) { /* {{{ */
 
 } /* }}} */
 
-static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
-  int statloc, pfds[2];
-  ssize_t len;
-  pid_t pid;
+static void start_rescue_shell(void) { /* {{{ */
+  char *bboxinstall[] = { BUSYBOX, "--install", NULL };
+  char *bboxlaunch[] = { BUSYBOX, "ash", NULL };
+  char buffer[CMDLINE_SIZE];
 
-  if (pipe(pfds) != 0) {
-    perror("pipe");
-    return errno;
+  if (access(BUSYBOX, X_OK) != 0) {
+    return;
   }
 
-  pid = fork();
-  if (pid < 0) {
-    perror("fork");
-    return errno;
+  if (!bbox_installed) {
+    forkexecwait(bboxinstall);
   }
 
-  if (pid == 0) {
-    close(pfds[0]); /* unused by child */
+  /* set a prompt */
+  putenv("PS1=[ramfs \\W]\\$ ");
 
-    /* child writes on CHILD_WRITE_FD will be received by the parent */
-    if (dup2(pfds[1], CHILD_WRITE_FD) == -1) {
-      perror("dup2");
-      _exit(errno);
-    }
-
-    /* now redundant */
-    close(pfds[1]);
-
-    execv(argv[0], argv);
-    fprintf(stderr, "exec: %s: %s", argv[0], strerror(errno));
-    _exit(errno);
+  /* start the shell, allow writes on FDINIT */
+  if (read_child_response(bboxlaunch, buffer) > 0) {
+    parse_envstring(buffer);
   }
 
-  close(pfds[1]); /* unused by parent */
+} /* }}} */
 
-  memset(buffer, 0, CMDLINE_SIZE);
-  len = read(pfds[0], buffer, CMDLINE_SIZE);
-  close(pfds[0]);
+static char *probe_fstype(const char *devname) { /* {{{ */
+  int ret;
+  char *fstype;
+  blkid_probe pr;
 
-  waitpid(pid, &statloc, 0);
-  if (WIFEXITED(statloc) && WEXITSTATUS(statloc) != 0) {
-    err("hook `%s' exited with status %d\n", argv[0], WEXITSTATUS(statloc));
+  pr = blkid_new_probe_from_filename(devname);
+  if (!pr) {
+    err("%s: failed to create a new libblkid probe\n", devname);
+    return NULL;
   }
 
-  return len;
+  blkid_probe_enable_superblocks(pr, 1);
+  blkid_probe_set_superblocks_flags(pr, BLKID_SUBLKS_TYPE);
+
+  ret = blkid_do_safeprobe(pr);
+  if (ret == -1) {
+    return NULL;
+  } else if (ret == 1) {
+    err("failed to probe device %s\n", devname);
+    return NULL;
+  } else {
+    const char *name, *data;
+    blkid_probe_get_value(pr, 0, &name, &data, NULL);
+    fstype = strdup(data);
+  }
+
+  blkid_free_probe(pr);
+
+  return fstype;
+} /* }}} */
+
+static void movemount(const char *src, const char *dest) { /* {{{ */
+  /* move the mount if it exists on the real root, otherwise get rid of it */
+  if (access(dest, F_OK) == 0) {
+    mount(src, dest, NULL, MS_MOVE,  NULL);
+  } else {
+    umount2(src, MNT_DETACH);
+  }
 } /* }}} */
 
 static int udevadm(char *action, char *arg1, char *arg2) { /* {{{ */
@@ -575,6 +578,8 @@ static void run_hooks(void) { /* {{{ */
   char line[PATH_MAX];
   char *hook;
 
+  setenv("FDINIT", TOSTRING(CHILD_WRITE_FD), 1);
+
   fp = fopen("/config", "r");
   if (!fp) {
     return;
@@ -593,7 +598,6 @@ static void run_hooks(void) { /* {{{ */
 
         /* lazily install symlinks */
         if (!bbox_installed) {
-          setenv("FDINIT", TOSTRING(CHILD_WRITE_FD), 1);
           forkexecwait(bboxinstall);
           bbox_installed = 1;
         }
