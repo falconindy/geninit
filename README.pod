@@ -127,6 +127,9 @@ into the environment of init, e.g.
 
   echo 'root=/dev/foo' >&$FDINIT
 
+Note that B<FDINIT> is also available for any rescue shell that may be invoked
+during bootstrap.
+
 =head1 BUILDER API
 
 geninit features a small API intended for use by builders. These are base
