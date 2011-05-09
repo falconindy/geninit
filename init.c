@@ -722,6 +722,11 @@ static void try_create_root(void) { /* {{{ */
     return;
   }
 
+  if (!major(rootdev) && !minor(rootdev)) {
+    err("invalid root specifier: %s\n", root);
+    return;
+  }
+
   if (mknod("/dev/root", 0660|S_IFBLK, rootdev) != 0) {
     perror("failed to create root device");
     return;
