@@ -690,7 +690,31 @@ static void try_create_root(void) { /* {{{ */
 
   root = getenv("root");
 
+  if (strncmp(root, "UUID=", 5) == 0 ||
+      strncmp(root, "LABEL=", 6) == 0) {
+    /* resolve UUID= or LABEL= syntax */
+    char *key, *val, *res;
+
+    key = val = root;
+    strsep(&val, "=");
+
+    res = blkid_evaluate_tag(key, val, NULL);
+    if (!res) {
+      err("failed to resolve %s to a root device", root);
+      return;
+    }
+    root = res;
+
+    /* it may already exist */
+    if (access(root, F_OK) == 0) {
+      setenv("root", root, 1);
+      return;
+    }
+  }
+
+  /* intentional fallthrough from above */
   if (strncmp(root, "/dev/", 5) == 0) {
+    /* regular block device */
     FILE *fp;
     char path[PATH_MAX], majmin[8];
 
@@ -719,6 +743,11 @@ static void try_create_root(void) { /* {{{ */
         "/dev/root yourself!\n", root);
     start_rescue_shell();
     printf("continuing... chance of failure = high\n");
+    return;
+  }
+
+  if (!major(rootdev) && !minor(rootdev)) {
+    err("invalid root specifier: %s\n", root);
     return;
   }
 
