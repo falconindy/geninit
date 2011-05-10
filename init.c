@@ -385,7 +385,7 @@ static void mount_setup(void) { /* {{{ */
   /* setup basic filesystems */
   mount("proc", "/proc", "proc", TMPFS_FLAGS, NULL);
   mount("sys", "/sys", "sysfs", TMPFS_FLAGS, NULL);
-  mount("tmpfs", "/run", "tmpfs", TMPFS_FLAGS, "mode=0755,size=10M");
+  mount("run", "/run", "tmpfs", TMPFS_FLAGS, "mode=0755,size=10M");
 
   /* ENODEV returned on non-existant FS */
   ret = mount("udev", "/dev", "devtmpfs", MS_NOSUID, "mode=0755,size=10M");
