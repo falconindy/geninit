@@ -20,6 +20,7 @@ DISTFILES := \
 	geninit.api \
 	geninit.quirks \
 	geninit \
+	lsinitramfs \
 	init.c \
 	example.preset \
 	Makefile
@@ -35,12 +36,14 @@ install: init install-doc
 	install -dm755 ${DESTDIR}${PREFIX}/share/geninit/builders
 	install -dm755 ${DESTDIR}${PREFIX}/share/geninit/hooks
 	install -dm755 ${DESTDIR}${PREFIX}/sbin
+	install -dm755 ${DESTDIR}${PREFIX}/bin
 	install -Dm644 geninit.conf ${DESTDIR}/etc/geninit.conf
 	install -Dm644 example.preset ${DESTDIR}/etc/geninit.d/example.preset
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit/hooks hooks/*
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit/builders builders/*
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit geninit.api geninit.quirks
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit init
+	install -m755 -t ${DESTDIR}${PREFIX}/bin lsinitramfs
 	sed "s#^\(declare.\+_sharedir\)=.*#\1=${PREFIX}/share/geninit#" < geninit > ${DESTDIR}${PREFIX}/sbin/geninit
 	chmod 755 ${DESTDIR}${PREFIX}/sbin/geninit
 .PHONY: install
