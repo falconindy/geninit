@@ -311,12 +311,12 @@ __build_image() { # {{{
   msg "Creating$([[ $compress == cat ]] || printf " $compress") initramfs: $imagename"
 
   pushd "$buildroot" &>/dev/null
-  find . -print0 | cpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename.tmp"
+  find . -print0 | bsdcpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename.tmp"
   pipesave=("${PIPESTATUS[@]}") # save immediately
   popd &>/dev/null
 
   (( pipesave[0] )) && errmsg="failed to create filelist (find reported error)"
-  (( pipesave[1] )) && errmsg="failed to create cpio archive (cpio reported error)"
+  (( pipesave[1] )) && errmsg="failed to create archive (bsdcpio reported error)"
   (( pipesave[2] )) && errmsg="$compress reported error compressing image"
 
   # check for fatal errors
