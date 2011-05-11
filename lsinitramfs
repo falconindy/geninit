@@ -35,20 +35,20 @@ usage: ${0##*/} [options] <initramfs>
 
   Options:
    -h             display this help
-   -q             quieter output
+   -v             more verbose output
    -x             extract image to disk
 
 USAGE
   exit 1
 }
 
-declare verbose='--verbose'
+declare verbose=
 declare list='--list'
 
-while getopts ':hqx' flag; do
+while getopts ':hvx' flag; do
   case $flag in
     h) usage ;;
-    q) unset verbose ;;
+    v) verbose='--verbose'  ;;
     x) unset list ;;
     \?) die "invalid option -- '$OPTARG'" ;;
   esac
