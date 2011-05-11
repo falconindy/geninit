@@ -29,9 +29,10 @@
 /* util-linux */
 #include <blkid/blkid.h>
 
-#define msg(...) {if (!quiet) fprintf(stderr, ":: " __VA_ARGS__);}
-#define err(...) {fprintf(stderr, "error: " __VA_ARGS__);}
-#define die(...) {err(__VA_ARGS__); _exit(1);}
+#define msg(...)  {if (!quiet) fprintf(stderr, ":: " __VA_ARGS__);}
+#define err(...)  {fprintf(stderr, "error: " __VA_ARGS__);}
+#define warn(...) {fprintf(stderr, "warning: " __VA_ARGS__);}
+#define die(...)  {err(__VA_ARGS__); _exit(1);}
 
 #define QUOTE(x)        #x
 #define TOSTRING(x)     QUOTE(x)
@@ -145,38 +146,70 @@ static char *sanitize_var(char *var) { /* {{{ */
   return var;
 } /* }}} */
 
-static void delete_contents(char *path, dev_t rootdev) { /* {{{ */
-  DIR *dir;
-  char name[PATH_MAX];
-  struct dirent *dp;
-  struct stat st;
+static int delete_contents(char *dirname) { /* {{{ */
+  struct stat rb; /* rootdir buffer */
+  int dfd, rc = -1;
+  DIR *dp;
 
-  /* Don't descend into other filesystems */
-  if (lstat(path, &st) || st.st_dev != rootdev) {
-    return;
+  if (!(dp = opendir(dirname))) {
+    warn("failed to open %s", dirname);
+    goto done;
   }
 
-  /* Recursively delete the contents of directories */
-  if (S_ISDIR(st.st_mode)) {
-    dir = opendir(path);
-    if (dir) {
-      while ((dp = readdir(dir))) {
-        if (dp->d_ino) {
-          if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0) {
-            snprintf(name, PATH_MAX, "%s/%s", path, dp->d_name);
-            delete_contents(name, rootdev);
-          }
-        }
+  dfd = dirfd(dp);
+
+  if (fstat(dfd, &rb)) {
+    warn("failed to stat %s", dirname);
+    goto done;
+  }
+
+  while(1) {
+    struct dirent *d;
+
+    errno = 0;
+    if (!(d = readdir(dp))) {
+      if (errno) {
+        warn("failed to read %s", dirname);
+        goto done;
       }
-      closedir(dir);
-
-      /* dir should now be empty, zap it */
-      rmdir(path);
+      break; /* end of directory */
     }
-  } else {
-    /* It wasn't a dir, zap it */
-    unlink(path);
+
+    if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0) {
+      continue;
+    }
+
+    if (d->d_type == DT_DIR) {
+      struct stat sb; /* subdir buffer */
+
+      if (fstatat(dfd, d->d_name, &sb, AT_SYMLINK_NOFOLLOW)) {
+        warn("failed to stat %s/%s", dirname, d->d_name);
+        continue;
+      }
+
+      /* don't descend into other filesystems */
+      if (sb.st_dev == rb.st_dev) {
+        char subdir[strlen(dirname) + strlen(d->d_name) + 2];
+
+        sprintf(subdir, "%s/%s", dirname, d->d_name);
+        delete_contents(subdir);
+      } else {
+        continue;
+      }
+    }
+
+    if (unlinkat(dfd, d->d_name, d->d_type == DT_DIR ? AT_REMOVEDIR : 0)) {
+      warn("failed to unlink %s/%s", dirname, d->d_name);
+    }
   }
+
+  rc = 0; /* success */
+
+done:
+  if (dp) {
+    closedir(dp);
+  }
+  return rc;
 } /* }}} */
 
 static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
@@ -829,13 +862,11 @@ static void kill_udev(void) { /* {{{ */
 static int switch_root(char *argv[]) { /* {{{ */
   struct stat st;
   struct statfs stfs;
-  dev_t rootdev;
 
   /* this is mostly taken from busybox's util_linux/switch_root.c */
 
   chdir(NEWROOT);
   stat("/", &st);
-  rootdev = st.st_dev;
 
   /* sanity checks: we're about to rm -rf / ! */
   if (stat("/init", &st) != 0 || !S_ISREG(st.st_mode)) {
@@ -848,8 +879,8 @@ static int switch_root(char *argv[]) { /* {{{ */
     die("root filesystem is not ramfs/tmpfs!\n");
   }
 
-  /* zap everything out of rootdev */
-  delete_contents("/", rootdev);
+  /* zap everything out of root */
+  delete_contents("/");
 
   /* mount $PWD over / and chroot into it */
   if (mount(".", "/", NULL, MS_MOVE, NULL) != 0) {
