@@ -220,13 +220,13 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
 
   if (pipe(pfds) != 0) {
     perror("pipe");
-    return errno;
+    return -errno;
   }
 
   pid = fork();
   if (pid < 0) {
     perror("fork");
-    return errno;
+    return -errno;
   }
 
   if (pid == 0) {
@@ -275,6 +275,7 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
   waitpid(pid, &statloc, 0);
   if (WIFEXITED(statloc) && WEXITSTATUS(statloc) != 0) {
     err("hook `%s' exited with status %d\n", argv[0], WEXITSTATUS(statloc));
+    return -(WEXITSTATUS(statloc));
   }
 
   return total;
