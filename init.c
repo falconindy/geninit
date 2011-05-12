@@ -643,7 +643,7 @@ static void run_hooks(void) { /* {{{ */
     if (strncmp(line, "%HOOKS%", 7) == 0) {
       strtok(line, " \n"); /* ditch the fieldname */
       while ((hook = strtok(NULL, " \n"))) {
-        char response[CMDLINE_SIZE], path[PATH_MAX];
+        char response[BUFSIZ], path[PATH_MAX];
 
         snprintf(path, PATH_MAX, "/hooks/%s", hook);
         if (access(path, X_OK) != 0) {
