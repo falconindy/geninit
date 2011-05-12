@@ -689,6 +689,10 @@ static int wait_for_root(void) { /* {{{ */
   root = getenv("root");
   rootdelay = getenv("rootdelay");
 
+  if (access(root, F_OK) == 0) {
+    return 0; /* already exists */
+  }
+
   if (strncmp(root, "/dev/", 5) != 0) {
     return 1; /* not a path, so it won't be found */
   }
@@ -708,8 +712,13 @@ static int wait_for_root(void) { /* {{{ */
   while (delay--) {
     if (access(root, F_OK) == 0) {
       struct stat st;
-      if (stat(root, &st) == 0 && S_ISBLK(st.st_mode)) {
-        return 0; /* found */
+      if (stat(root, &st) == 0) {
+        if (S_ISBLK(st.st_mode)) {
+          return 0; /* found */
+        } else {
+          warn("%s showed up, but it isn't a block device!\n", root);
+          return 1; /* not found? */
+        }
       }
     }
     usleep(100000); /* .1 seconds */
