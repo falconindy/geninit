@@ -638,48 +638,53 @@ static void disable_hooks(void) { /* {{{ */
 
 static void run_hooks(void) { /* {{{ */
   char *bboxinstall[] = { BUSYBOX, "--install", NULL };
-  FILE *fp;
   char line[PATH_MAX];
   char *hook;
+  FILE *fp;
 
   setenv("FDINIT", TOSTRING(CHILD_WRITE_FD), 1);
+  line[0] = '\0';
 
-  fp = fopen("/config", "r");
-  if (!fp) {
+  fp = fopen("/config", "re");
+  if (fp) {
+    while (fgets(line, PATH_MAX, fp) != NULL) {
+      if (strncmp(line, "%HOOKS%", 7) == 0) {
+        break;
+      }
+      line[0] = '\0';
+    }
+    fclose(fp);
+  }
+
+  if (!line[0]) { /* never found a %HOOKS% line */
     return;
   }
 
-  while (fgets(line, PATH_MAX, fp) != NULL) {
-    if (strncmp(line, "%HOOKS%", 7) == 0) {
-      strtok(line, " \n"); /* ditch the fieldname */
-      while ((hook = strtok(NULL, " \n"))) {
-        char response[BUFSIZ], path[PATH_MAX];
+  strtok(line, " \n"); /* ditch the fieldname */
+  while ((hook = strtok(NULL, " \n"))) {
+    char *argv[] = { NULL, NULL };
+    char response[BUFSIZ], path[PATH_MAX];
 
-        snprintf(path, PATH_MAX, "/hooks/%s", hook);
-        if (access(path, X_OK) != 0) {
-          continue;
-        }
+    snprintf(path, PATH_MAX, "/hooks/%s", hook);
+    if (access(path, X_OK) != 0) {
+      continue;
+    }
 
-        /* lazily install symlinks */
-        if (!bbox_installed) {
-          forkexecwait(bboxinstall);
-          bbox_installed = 1;
-        }
+    /* lazily install symlinks */
+    if (!bbox_installed) {
+      forkexecwait(bboxinstall);
+      bbox_installed = 1;
+    }
 
-        char *argv[] = { path, NULL };
+    argv[0] = path;
 
-        /* writes to CHILD_WRITE_FD will read back and parsed as environment
-         * variables. the return value is that of read(3). */
-        if (read_child_response(argv, response) > 0) {
-          parse_envstring(response);
-        }
-      }
-
-      break;
+    /* writes to CHILD_WRITE_FD will read back and parsed as environment
+     * variables. the return value is that of read(3). */
+    if (read_child_response(argv, response) > 0) {
+      parse_envstring(response);
     }
   }
 
-  fclose(fp);
 } /* }}} */
 
 static void check_for_break(void) { /* {{{ */
