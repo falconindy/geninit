@@ -130,6 +130,34 @@ into the environment of init, e.g.
 Note that B<FDINIT> is also available for any rescue shell that may be invoked
 during bootstrap.
 
+A small shell library called libinit is available in the root of the initramfs.
+Hooks wanting to use this library should explicitly source it at the top of the
+hook source file. The library includes the following functions:
+
+=over 4
+
+=item B<msg> I<message>
+
+Sends a formatted message to standard output, provided that the kernel parameter
+'quiet' was not passed.
+
+=item B<err> I<message>
+
+Sends a formatted message to standard error.
+
+=item B<poll_device> I<device> [I<timeout>]
+
+Waits up to I<timeout> seconds for the specified I<device>, which is a block device
+or a symlink to a block device. This functions returns 0 when the device shows up,
+and 1 when it does not.
+
+=item B<initexport> I<key=val...>
+
+This is a shortcut for setting variables in init's environment. Any number of
+whitespace delimited key=value pairs can be exported via a single invocation.
+
+=back
+
 =head1 BUILDER API
 
 geninit features a small API intended for use by builders. These are base
