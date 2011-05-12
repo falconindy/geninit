@@ -103,10 +103,10 @@ Build an image, or images, as described in C</mnt/etc/geninit.d/kernel26.preset>
 
 =head1 BUILDERS
 
-Builders are bash scripts that are parsed during build time in order to add
+Builders are bash scripts that are executed during build time in order to add
 functionality to the image. They are sourced from the appropriate config file,
-and parsed in array index order. Builders may draw in an additional hookscript
-for use at runtime.
+and run in array index order. Builders may draw in an additional hookscript for
+use at runtime.
 
 At a minimum, builders must define a function called I<build>, which contains
 instructions on what geninit should add to the image. See the B<BUILDER API>
@@ -118,32 +118,41 @@ called via geninit's -H option.
 =head1 HOOKS
 
 Hooks are executed during the bootstrap process in order to facilitate finding
-and/or mounting of the root device. They run under Busybox's almquist shell.
-Because hooks are run as a child process of init, they are unable to directly
-export variables affecting their parent. If you need to communicate back with
-init, you may write environment variable declarations on file descriptor
-pointed to by the B<FDINIT> environment variable, which will be picked back up
-into the environment of init, e.g.
-
-  echo 'root=/dev/foo' >&$FDINIT
-
-Note that B<FDINIT> is also available for any rescue shell that may be invoked
-during bootstrap.
-
-A small shell library called libinit is available in the root of the initramfs.
-Hooks wanting to use this library should explicitly source it at the top of the
-hook source file. The library includes the following functions:
+and/or mounting of the root device. They run under Busybox's almquist shell. In
+addition to any variables sourced from the kernel cmdline, the following variables
+may be available from within the environment that hooks run in:
 
 =over 4
 
-=item B<msg> I<message>
+=item I<UDEVPID>
+
+When set, contains the PID of the udev daemon process.
+
+=item I<FDINIT>
+
+A numerical value describing a file descriptor which can be used to communicate
+with the parent process (init). The preferred method of setting variables in
+init is via the I<initexport> function defined by libinit.
+
+=back
+
+=head1 LIBINIT
+
+A small shell library called libinit is included by the C<base> builder. Hooks
+can use functions defined in this library by sourcing it from /libinit. The
+following functions are defined by libinit:
+
+=over 4
+
+=item B<msg> I<format> [I<message>]
 
 Sends a formatted message to standard output, provided that the kernel parameter
-'quiet' was not passed.
+'quiet' was not passed. Messages are prefixed with ":: ".
 
-=item B<err> I<message>
+=item B<err> I<format> [I<message>]
 
-Sends a formatted message to standard error.
+Sends a formatted message to standard error. Messages are prefixed with "error:
+".
 
 =item B<poll_device> I<device> [I<timeout>]
 
@@ -153,8 +162,8 @@ and 1 when it does not.
 
 =item B<initexport> I<key=val...>
 
-This is a shortcut for setting variables in init's environment. Any number of
-whitespace delimited key=value pairs can be exported via a single invocation.
+Set a variable in init's environment. Any number of whitespace delimited
+key=value pairs can be exported via a single invocation.
 
 =back
 
