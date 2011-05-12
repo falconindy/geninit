@@ -15,6 +15,7 @@ build() {
   add_dir /bin
 
   add_binary "@$_sharedir/init" "/init"
+  add_file "@$_sharedir/libinit" "/libinit"
   add_binary /lib/initcpio/busybox /bin/busybox
   add_binary /sbin/modprobe
   add_binary /sbin/blkid

@@ -21,6 +21,7 @@ DISTFILES := \
 	geninit.quirks \
 	geninit \
 	lsinitramfs \
+	libinit \
 	init.c \
 	example.preset \
 	Makefile
@@ -42,7 +43,7 @@ install: init install-doc
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit/hooks hooks/*
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit/builders builders/*
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit geninit.api geninit.quirks
-	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit init
+	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit init libinit
 	install -m755 -t ${DESTDIR}${PREFIX}/bin lsinitramfs
 	sed "s#^\(declare.\+_sharedir\)=.*#\1=${PREFIX}/share/geninit#" < geninit > ${DESTDIR}${PREFIX}/sbin/geninit
 	chmod 755 ${DESTDIR}${PREFIX}/sbin/geninit
