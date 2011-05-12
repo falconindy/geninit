@@ -369,7 +369,7 @@ static void start_rescue_shell(void) { /* {{{ */
 
 static char *probe_fstype(const char *devname) { /* {{{ */
   int ret;
-  char *fstype;
+  char *fstype = NULL;
   blkid_probe pr;
 
   pr = blkid_new_probe_from_filename(devname);
@@ -389,8 +389,17 @@ static char *probe_fstype(const char *devname) { /* {{{ */
     return NULL;
   } else {
     const char *name, *data;
-    blkid_probe_get_value(pr, 0, &name, &data, NULL);
-    fstype = strdup(data);
+    int i, nvals = blkid_probe_numof_values(pr);
+
+    /* btrfs (maybe others) returns more than just its fstype here so we're
+     * forced to iterate over the data to find the one true 'TYPE' */
+    for (i = 0; i < nvals; i++) {
+      blkid_probe_get_value(pr, i, &name, &data, NULL);
+      if (strcmp(name, "TYPE") == 0) {
+        fstype = strdup(data);
+        break;
+      }
+    }
   }
 
   blkid_free_probe(pr);
