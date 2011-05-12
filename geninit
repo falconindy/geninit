@@ -93,14 +93,14 @@ in_array() { # {{{
   [[ -z $1 ]] && return 1 # Not Found
 
   for item; do
-    [[ $item == $needle ]] && return 0 # Found
+    [[ "$item" == $needle ]] && return 0 # Found
   done
   return 1 # Not Found
 } # }}}
 
 cleanup() { # {{{
-  (( SHLVL == 2 )) && [[ $2 ]] && error "$2"
-  if (( savebuildroot )) && [[ -d $buildroot ]]; then
+  (( SHLVL == 2 )) && [[ "$2" ]] && error "$2"
+  if (( savebuildroot )) && [[ -d "$buildroot" ]]; then
     msg "buildroot preserved at: $buildroot"
   else
     rm -rf "$tmpdir"
@@ -143,7 +143,7 @@ builderlist() { # {{{
 builderhelp() { # {{{
   local builder=$1
 
-  [[ -f $_sharedir/builders/$builder ]] || die "no such builder: $builder"
+  [[ -f "$_sharedir/builders/$builder" ]] || die "no such builder: $builder"
   . "$_sharedir/builders/$builder"
   type -t helpmsg >/dev/null || die "no help for builder: $builder"
   msg "$builder"
@@ -158,15 +158,15 @@ builderhelp() { # {{{
 __get_kernver() { # {{{
   local kernel=$1
 
-  if [[ ${kernel:0:1} != / ]]; then
+  if [[ "${kernel:0:1}" != / ]]; then
     echo "$kernel"
     return 0
   fi
 
-  [[ -r $kernel ]] || return $ENOENT
+  [[ -r "$kernel" ]] || return $ENOENT
 
-  read _ kernver < <(file -b $basedir$kernel | grep -o 'version [^ ]\+')
-  if [[ $kernver ]]; then
+  read _ kernver < <(file -b "$basedir$kernel" | grep -o 'version [^ ]\+')
+  if [[ "$kernver" ]]; then
     echo "$kernver"
     return 0
   fi
@@ -181,7 +181,7 @@ __add_file() { # {{{
   #   $3: mode
 
   (( $# == 3 )) || return $EINVAL
-  [[ -e $buildroot$1 ]] && return $EEXIST
+  [[ -e "$buildroot$1" ]] && return $EEXIST
 
   (( verbose )) && plain "adding file: %s" "$1"
   install -Dm$3 "$2" "$buildroot$1"
@@ -192,8 +192,8 @@ __add_dir() { # {{{
   #   $1: pathname on initcpio
   #   $2: mode
 
-  (( $# == 2 )) || [[ $1 == /?* ]] || return $EINVAL
-  [[ -e $buildroot$1 ]] && return $EEXIST
+  (( $# == 2 )) || [[ "$1" == /?* ]] || return $EINVAL
+  [[ -e "$buildroot$1" ]] && return $EEXIST
 
   (( verbose )) && plain "adding dir: %s" "$1"
   install -dm$2 "$buildroot$1"
@@ -205,7 +205,7 @@ __add_pipe() { # {{{
   #   $2: mode
 
   (( $# == 2 )) || return $EINVAL
-  [[ -e $buildroot$1 ]] && return $EEXIST
+  [[ -e "$buildroot$1" ]] && return $EEXIST
 
   (( verbose )) && plain "adding pipe: %s" "$1"
   mkfifo -m$2 "$buildroot$1"
@@ -217,7 +217,7 @@ __add_slink() { # {{{
   #   $2: target of $1
 
   (( $# == 2 )) || return $EINVAL
-  [[ -L $buildroot$1 ]] && return $EEXIST
+  [[ -L "$buildroot$1" ]] && return $EEXIST
 
   (( verbose )) && plain "adding symlink: %s -> %s" "$2" "$1"
   ln -s "$2" "$buildroot$1"
@@ -229,12 +229,12 @@ __build_image() { # {{{
   local builder= module= line= mod= file= errmsg=
 
   # check our kernel version
-  [[ -d $basedir/lib/modules/$kernver ]] || die "kernel \`$kernver' not found"
+  [[ -d "$basedir/lib/modules/$kernver" ]] || die "kernel \`$kernver' not found"
 
   # this must be resolved to an absolute path
-  if [[ $imagename && ${imagename:0:1} != / ]]; then
+  if [[ "$imagename" && "${imagename:0:1}" != / ]]; then
     imagename=$(readlink -f "$imagename")
-    [[ $imagename ]] || die "Failed to resolve path to imagename"
+    [[ "$imagename" ]] || die "Failed to resolve path to imagename"
   fi
 
   (( dryrun )) && msg "Starting dry run: %s" "$kernver" || msg "Starting build: %s" "$kernver"
@@ -254,7 +254,7 @@ __build_image() { # {{{
   for file in "${files[@]}"; do
     local src=${file%%::*}
     local dest=${file##*::}
-    [[ $dest ]] || dest=$src
+    [[ "$dest" ]] || dest=$src
     add_binary "$src" "$dest" || { (( ++errors)); error "File not found: $file"; }
   done
 
@@ -262,7 +262,7 @@ __build_image() { # {{{
   for builder in "${builders[@]}"; do
     in_array "$builder" "${skipbuilders[@]}" && continue
 
-    if [[ ! -f $builderdir/$builder ]]; then
+    if [[ ! -f "$builderdir/$builder" ]]; then
       error "cannot find builder '$builder': No such file"
       (( ++errors ))
       continue
@@ -281,7 +281,7 @@ __build_image() { # {{{
   done
 
   # only create depmod files if there's modules added
-  if [[ -d $buildroot$moduledir ]]; then
+  if [[ -d "$buildroot$moduledir" ]]; then
     msg "Generating module dependencies"
     depmod -b "$buildroot" "$kernver" || (( ++errors ))
     # trim excess depmod files
@@ -303,12 +303,12 @@ __build_image() { # {{{
     return
   fi
 
-  if [[ $compress != cat ]]; then
+  if [[ "$compress" != cat ]]; then
     zopts=('-9')
-    [[ $compress == xz ]] && zopts+=('--check=crc32')
+    [[ "$compress" == xz ]] && zopts+=('--check=crc32')
   fi
 
-  msg "Creating$([[ $compress == cat ]] || printf " $compress") initramfs: $imagename"
+  msg "Creating$([[ "$compress" == cat ]] || printf " $compress") initramfs: $imagename"
 
   pushd "$buildroot" &>/dev/null
   find . -print0 | bsdcpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename.tmp"
@@ -320,7 +320,7 @@ __build_image() { # {{{
   (( pipesave[2] )) && errmsg="$compress reported error compressing image"
 
   # check for fatal errors
-  [[ $errmsg ]] && { rm "$imagename.tmp"; die "$errmsg"; }
+  [[ "$errmsg" ]] && { rm "$imagename.tmp"; die "$errmsg"; }
 
   # less than fatal errors
   if (( !errors )); then
@@ -339,7 +339,7 @@ __build_preset() { # {{{
   local var= cfg= opts= imagename=
   local -a presets
 
-  if [[ ! -f $basedir$presetfile ]]; then
+  if [[ ! -f "$basedir$presetfile" ]]; then
     error "preset not found: $1"
     return $ENOENT
   fi
@@ -356,7 +356,7 @@ __build_preset() { # {{{
     fi
 
     # resolve kernel version
-    if [[ -z $ALL_kver ]]; then
+    if [[ -z "$ALL_kver" ]]; then
       error "No kernel version defined for preset \`$1'"
       return $EINVAL
     fi
@@ -364,7 +364,7 @@ __build_preset() { # {{{
     # resolve image name
     var=${preset}_image
     imagename=${!var}
-    if [[ -z $imagename ]]; then
+    if [[ -z "$imagename" ]]; then
       error "No imagename defined for preset \`$1'"
       return $EINVAL
     fi
@@ -378,7 +378,7 @@ __build_preset() { # {{{
     opts=${!var}
 
     # this should always resolve to something (i hope)
-    if [[ ! -f $basedir$cfg ]]; then
+    if [[ ! -f "$basedir$cfg" ]]; then
       error "preset config file not found: \`$basedir$cfg'"
       return $ENOENT
     fi
@@ -463,7 +463,7 @@ if [[ -t 2 ]] && (( color )); then
 fi
 readonly NC BOLD BLUE GREEN RED YELLOW
 
-if [[ $preset ]]; then
+if [[ "$preset" ]]; then
   __build_preset "$preset"
   exit $?
 fi
@@ -473,17 +473,17 @@ fi
 # ----------------- #
 
 # if specified, does the basedir exist? trim any trailing slash
-if [[ $basedir ]]; then
+if [[ "$basedir" ]]; then
   basedir=${basedir%/}
 
   # if $basedir still exists (some noodle noggin might use -b /), make sure the
   # dir can be resolved
-  [[ $basedir && ! -d $basedir ]] && die "basedir \`$basedir' not found"
+  [[ "$basedir" && ! -d $basedir ]] && die "basedir \`$basedir' not found"
 fi
 
 # make sure our config exists, and source it
 config=${config:-$baseconfig}
-[[ ! -f $basedir$config ]] && die "failed to find config file: \`$basedir$config'" || . "$basedir$config"
+[[ ! -f "$basedir$config" ]] && die "failed to find config file: \`$basedir$config'" || . "$basedir$config"
 
 # declared as an array to force expansion. we have to be careful that the wrong
 # linker isn't picked for mulitlib systems, so we branch on $carch.
@@ -501,22 +501,22 @@ fi
 tmpdir=$(readlink -e "$(mktemp -d "${otmpdir:-/tmp}"/${0##*/}.XXXXXX)") || cleanup 1
 
 # does the kernel exist inside the basedir? we may need to resolve it...
-[[ $kern ]] && kernver=$(__get_kernver "$kern")
-[[ $kernver ]] || die "Invalid kernel specifier: $kern"
+[[ "$kern" ]] && kernver=$(__get_kernver "$kern")
+[[ "$kernver" ]] || die "Invalid kernel specifier: $kern"
 
 # is our supplied compression method (if supplied) valid?
 compress=${ocompress:-$compress}
 if [[ -z $compress || $compress == none ]]; then
   compress=cat  # NOOP compressor
 else
-  [[ $compress == @(gzip|bzip2|lzma|xz) ]] || die "unknown compression method: $compress"
+  [[ "$compress" == @(gzip|bzip2|lzma|xz) ]] || die "unknown compression method: $compress"
   type -P "$compress" >/dev/null || die "failed to find \`$compress' binary in PATH"
 fi
 
 # if $imagename is provided, its path needs to be valid
-if [[ $imagename ]]; then
+if [[ "$imagename" ]]; then
   imagepath=$(readlink -f "$imagename")
-  [[ $imagepath ]] || die "invalid path to imagename: $imagename"
+  [[ "$imagepath" ]] || die "invalid path to imagename: $imagename"
   [[ -w ${imagepath%/*} ]] || die "no permission to write to specified path: \`${imagepath%/*}'"
 else # no $imagename, so we're doing a dry run
   dryrun=1
@@ -535,7 +535,7 @@ if (( automods )); then
   . "$_sharedir/builders/autodetect" || die "unable to source autodetect builder"
   build
   msg "Autodetected modules"
-  [[ -s $autodetect_cache ]] && cat "$autodetect_cache"
+  [[ -s "$autodetect_cache" ]] && cat "$autodetect_cache"
   cleanup 0
 fi
 

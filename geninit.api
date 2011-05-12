@@ -31,16 +31,16 @@ add_file() { # {{{
   # determine source and destination
   local src= dest=${2:-$1} mode=
 
-  if [[ ${1:0:1} == @ ]]; then # assert an absolute path
+  if [[ "${1:0:1}" == @ ]]; then # assert an absolute path
     src=${1:1}
   else
     src=$basedir$1
   fi
 
-  [[ -f $src ]] || { error "$src: No such file"; return 1; }
+  [[ -f "$src" ]] || { error "$src: No such file"; return 1; }
 
   mode=$(stat -c %a "$src")
-  if [[ -z $mode ]]; then
+  if [[ -z "$mode" ]]; then
     error "failed to stat file: \`$src'"
     return 1
   fi
@@ -79,14 +79,14 @@ add_module() { # {{{
 
   module=${1%.ko?(.gz)}
 
-  if [[ -z $basedir ]]; then # fast path =)
+  if [[ -z "$basedir" ]]; then # fast path =)
     read -rd '' modpath < <(__kmodinfo -n "$module" 2>/dev/null)
   else # slow path =(
     read -rd '' modpath < <(find "$basedir$moduledir/kernel" -type f \
         -name "$module.ko" -o -name "$module.ko.gz" -print0)
   fi
 
-  [[ -z $modpath ]] && return 1
+  [[ -z "$modpath" ]] && return 1
 
   __add_file "${modpath#$basedir}" "$modpath" 644 || return 1
 
@@ -122,13 +122,13 @@ add_binary() { # {{{
   local -a sodeps
   local regex= binary= dest= mode= sodep= resolved= dirname=
 
-  if [[ ${1:0:1} == @ ]]; then # assert an absolute path
+  if [[ "${1:0:1}" == @ ]]; then # assert an absolute path
     binary=${1:1}
   else
     binary=$basedir$1
   fi
 
-  [[ -f $binary ]] || { error "$binary not found"; return 1; }
+  [[ -f "$binary" ]] || { error "$binary not found"; return 1; }
 
   dest=${2:-$binary}
   mode=$(stat -c %a "$binary")
@@ -145,9 +145,9 @@ add_binary() { # {{{
   # resolve sodeps
   regex='^[[:space:]]*[^/].+ => (.*) \(.*\)'
   while read line; do
-    [[ $line =~ $regex ]] && sodep="${BASH_REMATCH[1]}" || continue
+    [[ "$line" =~ $regex ]] && sodep="${BASH_REMATCH[1]}" || continue
 
-    if [[ -f $sodep ]]; then # -f follows symlinks, don't believe it!
+    if [[ -f "$sodep" ]]; then # -f follows symlinks, don't believe it!
       if [[ ! -L $sodep ]]; then
         __add_file "$sodep" "$basedir$sodep" "$(stat -c %a "$sodep")"
       else
@@ -207,13 +207,13 @@ add_driver_classes() { # {{{
   popd &>/dev/null
 
   # only add what autodetect found if we have a module cache
-  [[ -s $autodetect_cache && -z $NOAUTO ]] &&
+  [[ -s "$autodetect_cache" && -z "$NOAUTO" ]] &&
     IFS=$'\n' read -rd '' -a mods < <(grep -xFf <(printf '%s\n' "${mods[@]//-/_}") "$autodetect_cache")
 
   for mod in "${mods[@]}"; do
     # check for filter match
     for filter in "${MODFILTER[@]}"; do
-      [[ $mod == $filter ]] && continue 2
+      [[ "$mod" == $filter ]] && continue 2
     done
 
     add_module "$mod" && (( ++ret ))
