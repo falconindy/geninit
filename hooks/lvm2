@@ -4,11 +4,12 @@
 
 if [ -e /sys/class/misc/device-mapper ]; then
   if [ ! -e /dev/mapper/control ]; then
-    read major minor </sys/class/misc/device-mapper/dev
+    IFS=':' read major minor </sys/class/misc/device-mapper/dev
     /bin/mknod /dev/mapper/control c "$major" "$minor"
   fi
 
   echo ":: Activating logical volumes..."
-  /sbin/lvm ${quiet:+--quiet} vgchange --sysinit -a y
+  [ -d /etc/lvm ] && /sbin/lvm vgscan
+  /sbin/lvm ${quiet:+--quiet} vgchange --sysinit -ay
 fi
 
