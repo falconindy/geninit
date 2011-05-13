@@ -1,11 +1,19 @@
 #!/bin/sh
 
+. /libinit
+
 /sbin/modprobe -q dm-mod 2>/dev/null
 
 if [ -e /sys/class/misc/device-mapper ]; then
   if [ ! -e /dev/mapper/control ]; then
     IFS=':' read major minor </sys/class/misc/device-mapper/dev
     /bin/mknod /dev/mapper/control c "$major" "$minor"
+  fi
+
+  if [ -n "$lvmwait" ]; then
+    for pvdev in ${lvmwait//,/ }; do
+      poll_device $pvdev $rootdelay
+    done
   fi
 
   echo ":: Activating logical volumes..."
