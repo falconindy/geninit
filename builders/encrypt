@@ -16,7 +16,9 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook allows for an encrypted root device.
+  This hook allows for an encrypted root device. Refer to the wiki for a
+  detailed reference on setting up encryption:
+    https://wiki.archlinux.org/index.php/LUKS
 HELPEOF
 }
 
