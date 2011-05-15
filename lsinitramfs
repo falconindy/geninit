@@ -23,6 +23,8 @@
 # THE SOFTWARE.
 #
 
+shopt -s extglob
+
 die() {
   local mesg=$1; shift
   printf "error: $fmt\n" "$@"
@@ -34,6 +36,7 @@ usage() {
 usage: ${0##*/} [options] <initramfs>
 
   Options:
+   -a             analyze contents
    -h             display this help
    -v             more verbose output
    -x             extract image to disk
@@ -42,11 +45,21 @@ USAGE
   exit 1
 }
 
+in_array() {
+  local item needle=$1; shift
+
+  for item; do
+    [[ "$item" == $needle ]] && return 0 # Found
+  done
+  return 1 # Not Found
+}
+
 declare verbose=
 declare list='--list'
 
-while getopts ':hvx' flag; do
+while getopts ':ahvx' flag; do
   case $flag in
+    a) analyze=1 ;;
     h) usage ;;
     v) verbose='--verbose'  ;;
     x) unset list ;;
@@ -60,5 +73,56 @@ declare image=$1
 [[ $image ]] || usage
 [[ -f $image ]] || die "$image: No such file"
 
-bsdcpio -i --quiet $verbose $list <"$image"
+if (( analyze )); then
+  declare -a binaries explicitmod modules foundhooks hooks
+
+  # read contents of image
+  while read -r line; do
+    if [[ $line = *.ko?(.gz) ]]; then # module
+      line=${line##*/}
+      modules+=("${line%.ko?(.gz)}")
+      continue
+    elif [[ $line = ./hooks/* ]]; then
+      foundhooks+=("${line##*/}")
+    elif [[ $line = *@(/bin|/sbin)* ]]; then
+      binaries+=("${line#.}")
+    fi
+  done < <(bsdcpio -i --quiet --list <"$image")
+
+  # extract and read config
+  while read -r -a line; do
+    case "${line[0]}" in
+      "%HOOKS%")
+        for hook in "${line[@]:1}"; do
+          in_array "$hook" "${foundhooks[@]}" && hooks=("$hook")
+        done
+        ;;
+      "%MODULES%") explicitmod=("${line[@]:2}") ;;
+    esac
+  done < <(bsdtar Oxf "$image" config)
+
+  # print results
+  printf '==> Included modules:\n'
+  printf '  %s\n' "${modules[@]}"
+  printf '\n'
+
+  printf '==> Included binaries:\n'
+  printf '  %s\n' "${binaries[@]}"
+  printf '\n'
+
+  if (( ${#hooks[*]} )); then
+    printf '==> Hook run order:\n'
+    printf '  %s\n' "${hooks[@]}"
+    printf '\n'
+  fi
+
+  if (( ${#explicitmod[*]} )); then
+    printf '==> Explicitly loaded modules:\n'
+    printf '  %s\n' "${explicitmod[@]}"
+    printf '\n'
+  fi
+else
+  bsdcpio -i --quiet $verbose $list <"$image"
+fi
+
 
