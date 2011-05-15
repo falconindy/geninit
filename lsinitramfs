@@ -84,7 +84,7 @@ if (( analyze )); then
       continue
     elif [[ $line = ./hooks/* ]]; then
       foundhooks+=("${line##*/}")
-    elif [[ $line = *@(/bin|/sbin)* ]]; then
+    elif [[ $line = *@(/bin/|/sbin/)* ]]; then
       binaries+=("${line#.}")
     fi
   done < <(bsdcpio -i --quiet --list <"$image")
