@@ -90,7 +90,6 @@ die() { # {{{
 
 in_array() { # {{{
   local item needle=$1; shift
-  [[ -z $1 ]] && return 1 # Not Found
 
   for item; do
     [[ "$item" == $needle ]] && return 0 # Found
