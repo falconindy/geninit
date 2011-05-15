@@ -2,7 +2,7 @@
 
 build() {
   MODFILTER=('nls_*')
-  add_driver_classes fs
+  add_checked_modules fs
 }
 
 helpmsg() {

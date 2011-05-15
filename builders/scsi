@@ -2,7 +2,7 @@
 
 build() {
   MODFILTER=('*_cs')
-  add_driver_classes drivers/scsi drivers/block drivers/message/fusion &&
+  add_checked_modules drivers/scsi drivers/block drivers/message/fusion &&
     add_module sd_mod
 }
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 build() {
-  add_driver_classes drivers/firewire
+  add_checked_modules drivers/firewire
 
   add_module firewire-sbp2
   add_module sd_mod

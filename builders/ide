@@ -1,7 +1,7 @@
 #!/bin/bash
 
 build() {
-  add_driver_classes drivers/ide && add_module ide-gd_mod
+  add_checked_modules drivers/ide && add_module ide-gd_mod
 }
 
 helpmsg() {

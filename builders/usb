@@ -1,11 +1,11 @@
 #!/bin/bash
 
 build() {
-  if add_driver_classes drivers/usb/host; then
+  if add_checked_modules drivers/usb/host; then
     add_module usb_storage
     add_module sd_mod
     add_module sr_mod
-    add_driver_classes drivers/usb/storage
+    add_checked_modules drivers/usb/storage
   fi
 }
 
