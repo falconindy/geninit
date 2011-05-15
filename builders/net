@@ -4,7 +4,7 @@ build() {
   use_hookscript
 
   add_module nfs
-  add_driver_classes drivers/net
+  add_checked_modules drivers/net
 
   add_binary "/lib/initcpio/ipconfig" "/bin/ipconfig"
   add_binary "/lib/initcpio/nfsmount" "/bin/nfsmount"

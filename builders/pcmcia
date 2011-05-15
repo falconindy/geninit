@@ -1,7 +1,7 @@
 #!/bin/bash
 
 build() {
-  add_driver_classes drivers/pcmcia drivers/ide/legacy && add_module sd_mod
+  add_checked_modules drivers/pcmcia drivers/ide/legacy && add_module sd_mod
 
   add_binary "/lib/udev/pcmcia-socket-startup"
   add_binary "/lib/udev/pcmcia-check-broken-cis"
