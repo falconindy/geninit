@@ -54,6 +54,10 @@ in_array() {
   return 1 # Not Found
 }
 
+decomp() {
+  ${compress:-cat} ${compress:+-cd} "$@"
+}
+
 declare verbose=
 declare list='--list'
 
@@ -73,17 +77,18 @@ declare image=$1
 [[ $image ]] || usage
 [[ -f $image ]] || die "$image: No such file"
 
+# read compression type
+case "$(file -b "$image")" in
+  data|LZMA*) compress=lzma ;;
+  gzip*) compress=gzip ;;
+  bzip2*) compress=bzip2 ;;
+  lzop*) compress=lzop ;;
+  XZ*) compress=xz ;;
+esac
+
 if (( analyze )); then
   declare -a binaries explicitmod modules foundhooks hooks
-  declare kernver compress ratio
-
-  # read compression type
-  case "$(file -b "$image")" in
-    data|LZMA*) compress=LZMA ;;
-    gzip*) compress=gzip ;;
-    bzip2*) compress=bzip2 ;;
-    XZ*) compress=XZ ;;
-  esac
+  declare kernver ratio
 
   # calculate compression ratio
   if [[ $compress ]]; then
@@ -94,8 +99,8 @@ if (( analyze )); then
       printf '%s.%s%%\n' "${ratio:0:2}" "${ratio:2}"
     }
 
-    TIMEFORMAT=%R decomptime=$({ time bsdtar Oxf "$image" >/dev/null; } 2>&1 )
-    ratio=$(divide "$(stat -c %s "$image")" "$(bsdtar Oxf "$image" | wc -c)")
+    TIMEFORMAT=%R decomptime=$({ time decomp "$image" >/dev/null; } 2>&1 )
+    ratio=$(divide "$(stat -c %s "$image")" "$(decomp "$image" | bsdtar xOf - | wc -c)")
   fi
 
   # read contents of image
@@ -112,7 +117,7 @@ if (( analyze )); then
     elif [[ $line = *@(/bin/|/sbin/)* ]]; then
       binaries+=("${line#.}")
     fi
-  done < <(bsdcpio -i --quiet --list <"$image")
+  done < <(decomp "$image" | bsdtar tf -)
 
   # extract and read config
   while read -r -a line; do
@@ -124,7 +129,7 @@ if (( analyze )); then
         ;;
       "%MODULES%") explicitmod=("${line[@]:2}") ;;
     esac
-  done < <(bsdtar Oxf "$image" config)
+  done < <(decomp "$image" | bsdtar xOf - config)
 
   # print results
   printf '==> Image: %s\n' "$(readlink -e "$image")"
@@ -157,6 +162,6 @@ if (( analyze )); then
     printf '\n'
   fi
 else
-  bsdcpio -i --quiet $verbose $list <"$image"
+  decomp "$image" | bsdcpio -i --quiet $verbose $list
 fi
 

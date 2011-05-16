@@ -74,10 +74,10 @@ needs to be a writeable directory with a minimum of 20mb free.
 =item B<-z> I<compression>
 
 Override the compression method specified by the config file. geninit supports
-compression via B<gzip>, B<bzip2>, B<lzma>, and B<xz>. You can also use B<none>
-to disable compression. Please note that your kernel I<must> support your
-method and choice and your kernel will not be checked for this support! If in
-doubt, gzip is a safe choice.
+compression via B<gzip>, B<bzip2>, B<lzma>, and B<xz> (with optional support for
+B<lzop>). You can also use B<none> to disable compression. Please note that your
+kernel I<must> support your method and choice and your kernel will not be
+checked for this support! If in doubt, gzip is a safe choice.
 
 =back
 

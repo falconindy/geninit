@@ -508,7 +508,7 @@ compress=${ocompress:-$compress}
 if [[ -z $compress || $compress == none ]]; then
   compress=cat  # NOOP compressor
 else
-  [[ "$compress" == @(gzip|bzip2|lzma|xz) ]] || die "unknown compression method: $compress"
+  [[ "$compress" == @(gzip|bzip2|lzop|lzma|xz) ]] || die "unknown compression method: $compress"
   type -P "$compress" >/dev/null || die "failed to find \`$compress' binary in PATH"
 fi
 
