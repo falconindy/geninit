@@ -189,18 +189,23 @@ library dependencies which will also be added to the image.
 Add a directory, specified by its absolute path on the image. Unless specified,
 the permissions of the directory will be 755.
 
-=item B<add_driver_classes> I<class>...
+=item B<add_checked_modules> I<class>...
 
 Add one or more classifications of modules to the image, specified as a
 directory relative to C</lib/modules/KERNELVERSION/kernel>, e.g. 'drivers/scsi'
 or 'crypto'. Modules can be filtered by name by adding glob (including extended
 glob) patterns to the I<MODFILTER> array prior to calling
-B<add_driver_classes>. This filter is cleared after the parsing of each hook,
+B<add_checked_modules>. This filter is cleared after the parsing of each hook,
 although you are free to call B<unset> from within the builder, if desired.
 
 Additionally, if the autodetect builder is used as part of image generation,
 only the intersection of the autodetect module list and the results of the
-add_driver_classes call will be added to the resulting image.
+add_checked_modules call will be added to the resulting image.
+
+=item B<all_all_modules> I<class>...
+
+Identical to B<add_checked_modules> with the exception that no comparison
+against the autodetected module list is performed.
 
 =item B<add_file> I<source> [I<path>]
 

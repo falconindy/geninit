@@ -187,8 +187,8 @@ use_hookscript() { # {{{
   __add_file "/hooks/$script" "$basedir$_sharedir/hooks/$script" 755
 } # }}}
 
-add_driver_classes() { # {{{
-  # add a class of drivers, as a dir relative to /lib/modules/$kernver/kernel.
+add_checked_modules() { # {{{
+  # add a class of modules, as a dir relative to /lib/modules/$kernver/kernel.
   # if you need to block addition of modules, you can add glob patterns to the
   # 'MODFILTER' array within your builder. They must be quoted and the
   # filter is cleared after parsing of each builder.
@@ -221,6 +221,14 @@ add_driver_classes() { # {{{
 
   # return 0 on modules added, else 1
   return $(( ! ret ))
+} # }}}
+
+add_all_modules() { # {{{
+  # add a class of modules, as a dir relative to /lib/modules/$kernver/kernel.
+  # this function honors 'MODFILTER', but does not check against the autodetected
+  # cache of modules.
+
+  NOAUTO=1 add_checked_modules "$@"
 } # }}}
 
 # vim: set et sw=2 ft=sh:

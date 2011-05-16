@@ -1,14 +1,15 @@
 #!/bin/sh
 
+. /libinit
+
 if [ -e /consolefont.psfu ]; then
   font=/consolefont.psfu
 elif [ -e /consolefont.psf ]; then
   font=/consolefont.psf
 else
-  echo "No consolefont found despite added hook."
+  err "No consolefont found."
   exit 1
 fi
 
-echo -n ":: Loading console font..."
+msg '%s\n' "Loading console font..."
 /usr/sbin/setfont -C /dev/console $font
-echo "done."

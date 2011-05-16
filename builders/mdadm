@@ -2,7 +2,7 @@
 
 build() {
   MODFILTER=('dm-*')
-  add_driver_classes drivers/md
+  add_checked_modules drivers/md
 
   add_binary "/sbin/mdadm"
   add_file "/lib/udev/rules.d/64-md-raid.rules"

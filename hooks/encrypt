@@ -1,0 +1,111 @@
+#!/bin/sh
+
+. /libinit
+
+/sbin/modprobe -q dm-crypt >/dev/null 2>&1
+[ -e "/sys/class/misc/device-mapper" ] || exit 1
+
+if [ ! -e "/dev/mapper/control" ]; then
+  IFS=':' read major minor < /sys/class/misc/device-mapper/dev
+  /bin/mknod /dev/mapper/control c $major $minor
+fi
+[ "$quiet" = "y" ] && CSQUIET=">/dev/null"
+
+# Get keyfile if specified
+ckeyfile="/crypto_keyfile.bin"
+if [ -n "$cryptkey" ]; then
+  printf '%s' "$cryptkey" | { IFS=':' read -r ckdev ckarg1 ckarg2
+    if poll_device "$ckdev" "$rootdelay"; then
+      case "$ckarg1" in
+        *[!0-9]*)
+          # Use a file on the device
+          # ckarg1 is not numeric: ckarg1=filesystem, ckarg2=path
+          mkdir /ckey
+          mount -r -t $ckarg1 $ckdev /ckey
+          dd if=/ckey/$ckarg2 of=$ckeyfile >/dev/null 2>&1
+          umount /ckey
+          ;;
+        *)
+          # Read raw data from the block device
+          # ckarg1 is numeric: ckarg1=offset, ckarg2=length
+          dd if=$ckdev of=$ckeyfile bs=1 skip=$ckarg1 count=$ckarg2 >/dev/null 2>&1
+          ;;
+      esac
+    fi
+    [ -f "$ckeyfile" ] || echo "Keyfile could not be opened. Reverting to passphrase."
+  }
+fi
+
+if [ -n "$cryptdevice" ]; then
+  cryptdev=${cryptdevice%%:*}
+  cryptname=${cryptdevice##*:}
+fi
+
+if ! poll_device "$cryptdev" $rootdelay; then
+  rm -f "$ckeyfile"
+  exit 1
+fi
+
+if /sbin/cryptsetup isLuks $cryptdev >/dev/null 2>&1; then
+  dopassphrase=1
+  # If keyfile exists, try to use that
+  if [ -f "$ckeyfile" ]; then
+    if /sbin/cryptsetup --key-file $ckeyfile luksOpen $cryptdev $cryptname $CSQUIET; then
+      dopassphrase=0
+    else
+      echo "Invalid keyfile. Reverting to passphrase."
+    fi
+  fi
+  # Ask for a passphrase
+  if [ "$dopassphrase" -gt 0 ]; then
+    echo -e "\nA password is required to access the \`$cryptname' volume:"
+
+    #loop until we get a real password
+    while ! /sbin/cryptsetup luksOpen $cryptdev $cryptname $CSQUIET; do
+      sleep 2;
+    done
+  fi
+  if [ ! -e "/dev/mapper/$cryptname" ]; then
+    err "Password succeeded, but \`$cryptname' creation failed, aborting..."
+    exit 1
+  fi
+elif [ -n "$crypto" ]; then
+  msg "Non-LUKS encrypted device found..."
+  if [ $# -ne 5 ]; then
+    err "Verify parameter format: crypto=hash:cipher:keysize:offset:skip"
+    err "Non-LUKS decryption not attempted..."
+    exit 1
+  fi
+
+  exe="/sbin/cryptsetup create $cryptname $cryptdev"
+  printf '%s' "$crypto" | { IFS=':' read hash cipher size offset skip
+    [ -n "$hash" ] && exe="$exe --hash $hash"
+    [ -n "$cipher" ] && exe="$exe --cipher $cipher"
+    [ -n "$size" ] && exe="$exe --key-size $size"
+    [ -n "$offset" ] && exe="$exe --offset $offset"
+    [ -n "$skip" ] && exe="$exe --skip $skip"
+
+    if [ -f $ckeyfile ]; then
+      exe="$exe --key-file $ckeyfile"
+    else
+      exe="$exe --verify-passphrase"
+      echo -e "\nA password is required to access the \`$cryptname' volume:"
+    fi
+
+    if ! $exe $CSQUIET; then
+      err "Non-LUKS device decryption failed. verify format: "
+      err "      crypto=hash:cipher:keysize:offset:skip"
+      exit 1
+    fi
+  } || exit 1
+
+  if [ ! -e "/dev/mapper/$cryptname" ]; then
+    err "Password succeeded, but \`$cryptname' creation failed, aborting..."
+    exit 1
+  fi
+
+else
+  err "Failed to open encryption mapping: The device \`$cryptdev' is not a LUKS volume and the crypto= paramater was not specified."
+fi
+
+rm -f $ckeyfile
