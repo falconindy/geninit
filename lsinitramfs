@@ -138,7 +138,11 @@ if (( analyze )); then
   printf '\n'
 
   printf '==> Included modules:\n'
-  printf '  %s\n' "${modules[@]}"
+  for mod in "${modules[@]}"; do
+    printf '  %s' "$mod"
+    in_array "${mod//_/-}" "${explicitmod[@]//_/-}" && printf ' [explicit]'
+    printf '\n'
+  done
   printf '\n'
 
   printf '==> Included binaries:\n'
@@ -148,12 +152,6 @@ if (( analyze )); then
   if (( ${#hooks[*]} )); then
     printf '==> Hook run order:\n'
     printf '  %s\n' "${hooks[@]}"
-    printf '\n'
-  fi
-
-  if (( ${#explicitmod[*]} )); then
-    printf '==> Explicitly loaded modules:\n'
-    printf '  %s\n' "${explicitmod[@]}"
     printf '\n'
   fi
 else
