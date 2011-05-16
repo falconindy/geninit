@@ -79,7 +79,7 @@ if (( analyze )); then
 
   # read compression type
   case "$(file -b "$image")" in
-    data|lzma*) compress=LZMA ;;
+    data|LZMA*) compress=LZMA ;;
     gzip*) compress=gzip ;;
     bzip2*) compress=bzip2 ;;
     XZ*) compress=XZ ;;
