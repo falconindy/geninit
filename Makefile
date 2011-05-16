@@ -38,7 +38,7 @@ init: init.c
 	${CC} -o $@ ${LDFLAGS} init.o
 
 install-doc: doc
-	install -Dm644 geninit.8 ${DESTDIR}/share/man/man8/geninit.8
+	install -Dm644 geninit.8 ${DESTDIR}${PREFIX}/share/man/man8/geninit.8
 .PHONY: install-doc
 
 install-dirs:
