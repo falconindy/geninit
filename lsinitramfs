@@ -137,13 +137,15 @@ if (( analyze )); then
   fi
   printf '\n'
 
-  printf '==> Included modules:\n'
-  for mod in "${modules[@]}"; do
-    printf '  %s' "$mod"
-    in_array "${mod//_/-}" "${explicitmod[@]//_/-}" && printf ' [explicit]'
+  if (( ${#modules[*]} )); then
+    printf '==> Included modules:\n'
+    for mod in "${modules[@]}"; do
+      printf '  %s' "$mod"
+      in_array "${mod//_/-}" "${explicitmod[@]//_/-}" && printf ' [explicit]'
+      printf '\n'
+    done
     printf '\n'
-  done
-  printf '\n'
+  fi
 
   printf '==> Included binaries:\n'
   printf '  %s\n' "${binaries[@]}"
