@@ -17,7 +17,7 @@ build() {
     fi
 
     if [[ -x /sbin/mdadm ]]; then
-      /sbin/mdadm -Esv /dev/[rhs]d* /dev/ida/* /dev/cciss/* /dev/ataraid/* /dev/mapper/* |\
+      /sbin/mdadm -Esv /dev/[hrsv]d* /dev/ida/* /dev/cciss/* /dev/ataraid/* /dev/mapper/* |\
         sed -n 's/.*level=\([^ ]\+\) .*/\1/p' |\
         sed 's/\<raid[456]\>/raid456/g' | sort -u >>"$autodetect_cache"
     fi
@@ -29,9 +29,10 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook autodetects needed modules for the initramfs. This hook should be
-  placed after base in order to best take advantage of it. Any hooks placed
-  prior to this hook will be installed in full.
+  This builder autodetects needed modules for the initramfs. This does not add
+  any modules on its own, but rather serves as a basis for limiting what the
+  following builders will add. Any buidlers placed prior to this will be
+  installed in full.
 HELPEOF
 }
 
