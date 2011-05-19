@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/klog.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -632,6 +633,26 @@ static void disable_hooks(void) { /* {{{ */
   free(list);
 } /* }}} */
 
+static void set_kloglevel(void) { /* {{{ */
+  char *level;
+  int ret;
+
+  level = getenv("loglevel");
+  if (!level) {
+    return;
+  }
+
+  if (strlen(level) > 1 || *level < '1' || *level > '8') {
+    err("invalid log level: %s\n", level);
+    return;
+  }
+
+  ret = klogctl(8, NULL, *level - 48);
+  if (ret != 0) {
+    perror("klogctl");
+  }
+} /* }}} */
+
 static void run_hooks(void) { /* {{{ */
   char *bboxinstall[] = { BUSYBOX, "--install", NULL };
   char line[PATH_MAX];
@@ -641,7 +662,7 @@ static void run_hooks(void) { /* {{{ */
   setenv("FDINIT", TOSTRING(CHILD_WRITE_FD), 1);
   line[0] = '\0';
 
-  fp = fopen("/config", "re");
+  fp = fopen("/config", "r");
   if (fp) {
     while (fgets(line, PATH_MAX, fp) != NULL) {
       if (strncmp(line, "%HOOKS%", 7) == 0) {
@@ -938,6 +959,7 @@ int main(int argc, char *argv[]) {
   load_extra_modules();         /* load modules passed in on cmdline */
   trigger_udev_events();        /* read and process uevent queue */
   disable_hooks();              /* delete hooks specified on cmdline */
+  set_kloglevel();              /* set user specified loglevel */
   run_hooks();                  /* run remaining hooks */
   check_for_break();            /* did the user request a shell? */
 

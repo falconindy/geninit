@@ -1,3 +1,0 @@
-#!/bin/sh
-
-dmesg -n 3
