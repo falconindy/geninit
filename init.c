@@ -836,14 +836,15 @@ static void try_create_root(void) { /* {{{ */
 } /* }}} */
 
 static int mount_root(void) { /* {{{ */
-  char *root, *fstype;
+  char *root, *fstype, *data;
   int ret = 1;
 
   root = getenv("root");
-
+  data = getenv("rootflags");
   fstype = getenv("rootfstype");
+
   if (fstype) {
-    return mount(root, NEWROOT, fstype, rootflags, NULL); 
+    return mount(root, NEWROOT, fstype, rootflags, data);
   }
 
   fstype = probe_fstype(root);
@@ -855,7 +856,7 @@ static int mount_root(void) { /* {{{ */
     return ret;
   }
 
-  ret = mount(root, NEWROOT, fstype, rootflags, NULL);
+  ret = mount(root, NEWROOT, fstype, rootflags, data);
   free(fstype);
 
   return ret;
