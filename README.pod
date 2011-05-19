@@ -101,6 +101,33 @@ Build an image, or images, as described in C</mnt/etc/geninit.d/kernel26.preset>
 
 =back
 
+=head1 KERNEL COMMAND LINE
+
+geninit pays special attention to some parameters on the kernel cmdline, in
+addition to the standard parameters such as B<root> and B<init>. In addition
+to the ensuing list, some hooks may look for environment variables. Refer to
+the help for individual builders for more information.
+
+=over 4
+
+=item B<break>
+
+Request a shell during the early userspace process. This occurs after all hooks
+have been run, but prior to the root device being mounted.
+
+=item B<loglevel=>I<#>
+
+Sets the kernel log priority according to the number provided (1-8), with
+larger values producing more output. See B<klogctl>(3) for an explanation of
+the values. If
+
+=item B<rootflags=>I<flags>
+
+A comma separated list of options passed directly to the final parameter of
+B<mount>(2) when mounting the root device.
+
+=back
+
 =head1 BUILDERS
 
 Builders are bash scripts that are executed during build time in order to add
