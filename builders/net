@@ -12,7 +12,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads the necessary modules for a network device.
+  This builder loads the necessary modules for a network device.
   Detection will take place at runtime. To minimize the modules
   in the image, add the autodetect hook too.
   For pcmcia net devices please use pcmcia hook too.

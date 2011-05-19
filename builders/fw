@@ -10,7 +10,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads the necessary modules for a firewire root device.
+  This builder loads the necessary modules for a firewire root device.
 HELPEOF
 }
 

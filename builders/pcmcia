@@ -11,7 +11,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook provides the necessary modules for a pcmcia root device.
+  This builder provides the necessary modules for a pcmcia root device.
 HELPEOF
 }
 

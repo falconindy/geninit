@@ -6,7 +6,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook initializes support for resuming from disk. Supports swsusp and
+  This builder initializes support for resuming from disk. Supports swsusp and
   suspend2.
 HELPEOF
 }

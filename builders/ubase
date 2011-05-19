@@ -20,7 +20,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook sets up very little.
+  This builder sets up very little.
 HELPEOF
 }
 

@@ -13,7 +13,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook detects a virtual disk created by the memdisk tool
+  This builder detects a virtual disk created by the memdisk tool
   (http://syslinux.zytor.com/wiki/index.php/MEMDISK).
 HELPEOF
 }

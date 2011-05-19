@@ -23,7 +23,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads keymap(s) specified in rc.conf during early userspace.
+  This builder loads keymap(s) specified in rc.conf during early userspace.
 HELPEOF
 }
 

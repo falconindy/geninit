@@ -11,7 +11,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads the necessary modules for an usb root device.
+  This builder loads the necessary modules for an usb root device.
 HELPEOF
 }
 

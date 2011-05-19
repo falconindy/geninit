@@ -28,7 +28,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook provides a crucial base layout for the initramfs. Do not remove
+  This builder provides a crucial base layout for the initramfs. Do not remove
   this unless you know exactly what you are doing.
 HELPEOF
 }

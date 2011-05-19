@@ -18,7 +18,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads the necessary modules for an lvm2 root device.
+  This builder loads the necessary modules for an lvm2 root device.
 HELPEOF
 }
 

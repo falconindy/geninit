@@ -26,7 +26,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads the CONSOLEFONT specified in rc.conf during early userspace.
+  This builder loads the CONSOLEFONT specified in rc.conf during early userspace.
 HELPEOF
 }
 

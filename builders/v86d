@@ -7,7 +7,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-This hook includes support for v86d, the userspace helper for uvesafb.
+This builder includes support for v86d, the userspace helper for uvesafb.
 HELPEOF
 }
 

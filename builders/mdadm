@@ -10,7 +10,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads the necessary modules for an mdadm root device. Arrays are
+  This builder loads the necessary modules for an mdadm root device. Arrays are
   assembled at runtime via udev.
 HELPEOF
 }

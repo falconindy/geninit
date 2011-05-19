@@ -6,7 +6,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads the necessary modules for a legacy ide root device. Chances
+  This builder loads the necessary modules for a legacy ide root device. Chances
   are high that you can use the ata hook instead of this.
 HELPEOF
 }

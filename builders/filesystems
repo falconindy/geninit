@@ -7,7 +7,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook adds filesystems modules to the image.
+  This builder adds filesystems modules to the image.
 HELPEOF
 }
 

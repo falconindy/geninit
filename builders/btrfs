@@ -8,7 +8,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook supports multi device btrfs volumes.
+  This builder supports multi device btrfs volumes.
 HELPEOF
 }
 

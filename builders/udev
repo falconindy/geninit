@@ -23,7 +23,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook provides udev to detect and load the modules for your root device.
+  This builder provides udev to detect and load the modules for your root device.
   It is required for loading firmware. This builder is recommended.
 HELPEOF
 }

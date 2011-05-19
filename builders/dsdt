@@ -6,7 +6,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This hook loads a custom ACPI dsdt file during boot. Place your custom dsdt
+  This builder loads a custom ACPI dsdt file during boot. Place your custom dsdt
   file for inclusion in: /usr/share/geninit/custom.dsdt
 HELPEOF
 }
