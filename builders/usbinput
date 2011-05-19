@@ -6,9 +6,7 @@ build() {
 
 helpmsg() {
   cat<<HELPEOF
-  This builder loads the necessary modules for an usb input device. Detection
-  will take place at runtime. To minimize the modules in the image, add the
-  autodetect hook too.
+  This builder loads the necessary modules for an usb input device.
 HELPEOF
 }
 
