@@ -1,13 +1,12 @@
 #!/bin/bash
 
 build() {
-    use_hookscript
+  use_hookscript
 }
 
 helpmsg() {
   cat<<HELPEOF
-  This builder initializes support for resuming from disk. Supports swsusp and
-  suspend2.
+  This builder provides support for hibernation via swsusp and suspend2.
 HELPEOF
 }
 
