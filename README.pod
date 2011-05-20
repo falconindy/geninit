@@ -103,10 +103,9 @@ Build an image, or images, as described in C</mnt/etc/geninit.d/kernel26.preset>
 
 =head1 KERNEL COMMAND LINE
 
-geninit pays special attention to some parameters on the kernel cmdline, in
-addition to the standard parameters such as B<root> and B<init>. In addition
-to the ensuing list, some hooks may look for environment variables. Refer to
-the help for individual builders for more information.
+geninit pays special attention to some parameters on the kernel cmdline. In
+addition to the ensuing list, some hooks may look for environment variables.
+Refer to the help for individual builders for more information.
 
 =over 4
 
