@@ -115,11 +115,28 @@ the help for individual builders for more information.
 Request a shell during the early userspace process. This occurs after all hooks
 have been run, but prior to the root device being mounted.
 
+=item B<init=>I<path>
+
+An optional parameter to specify an alternate init system for userspace. If not
+specified, this defaults to /sbin/init.
+
 =item B<loglevel=>I<#>
 
 Sets the kernel log priority according to the number provided (1-8), with
 larger values producing more output. See B<klogctl>(3) for an explanation of
-the values. If
+the values.
+
+=item B<root=>I<device>
+
+The root device to be mounted before leaving early userspace. This can take
+a number of different formats, such as:
+
+  root=/dev/sda2
+  root=LABEL=root
+  root=UUID=037b9d94-148e-4ee4-8d38-67bfe15bb535
+  root=MAJOR:MINOR
+
+This parameter, for obvious reasons, must be specified.
 
 =item B<rootflags=>I<flags>
 
