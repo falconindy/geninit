@@ -27,7 +27,7 @@ shopt -s extglob
 
 die() {
   local mesg=$1; shift
-  printf "error: $fmt\n" "$@"
+  printf "error: $mesg\n" "$@"
   exit 1
 }
 
