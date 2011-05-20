@@ -437,11 +437,7 @@ static void mount_setup(void) { /* {{{ */
     /* devtmpfs not available, use standard tmpfs */
     mount("udev", "/dev", "tmpfs", MS_NOSUID, "mode=0755,size=10M");
 
-    /* create necessary nodes
-     * crw------- 1 root root 5, 1 Apr  2 18:30 /dev/console
-     * crw-rw-rw- 1 root root 1, 3 Apr  2 18:30 /dev/null
-     * crw-rw-rw- 1 root root 1, 5 Apr  2 18:30 /dev/zero
-     */
+    /* create necessary nodes */
     mknod("/dev/console", S_IFCHR|0600, makedev(5, 1));
     mknod("/dev/null", S_IFCHR|0666, makedev(1, 3));
     mknod("/dev/zero", S_IFCHR|0666, makedev(1, 5));
