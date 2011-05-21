@@ -18,9 +18,10 @@ tailor the image to the system's hardware and software needs.
 
 =item B<-b> I<basedir>
 
-Specify a base directory other than C</>. This is reserved for usage during a
-chroot. geninit will attempt to use as much as possible from the guest system,
-drawing only from the host system when necessary.
+Specify a base directory other than C</>. This might be useful when mounting
+another system from a rescue CD. geninit will attempt to use as much as
+possible from the guest system, drawing only from the host system when
+necessary.
 
 =item B<-c> I<config-file>
 
@@ -28,8 +29,9 @@ Use an alterate config file. Defaults to C</etc/geninit.conf>.
 
 =item B<-g> I<imagename>
 
-Specify the absolute path of the generated initramfs image. If unspecified,
-a dry-run will be performed and no image will be created.
+Specify the absolute path of the generated initramfs. If not specified, and in
+the absence of the B<-p> option, a dry-run will be performed and no image will
+be created.
 
 =item B<-H> I<builder>
 
@@ -74,10 +76,10 @@ needs to be a writeable directory with a minimum of 20mb free.
 =item B<-z> I<compression>
 
 Override the compression method specified by the config file. geninit supports
-compression via B<gzip>, B<bzip2>, B<lzma>, and B<xz> (with optional support for
-B<lzop>). You can also use B<none> to disable compression. Please note that your
-kernel I<must> support your method and choice and your kernel will not be
-checked for this support! If in doubt, gzip is a safe choice.
+compression via B<gzip>, B<bzip2>, B<lzma>, B<xz>, and B<lzop>. You can also use
+B<none> to disable compression. Please note that your kernel must have support
+for this method. geninit will not make this check for you! If in doubt, gzip is
+a safe choice.
 
 =back
 
@@ -117,7 +119,7 @@ have been run, but prior to the root device being mounted.
 =item B<init=>I<path>
 
 An optional parameter to specify an alternate init system for userspace. If not
-specified, this defaults to /sbin/init.
+specified, this defaults to C</sbin/init>.
 
 =item B<loglevel=>I<#>
 
@@ -139,17 +141,25 @@ This parameter, for obvious reasons, must be specified.
 
 =item B<rootflags=>I<flags>
 
-A comma separated list of options passed directly to the final parameter of
-B<mount>(2) when mounting the root device.
+A comma separated list of filesystem specific options passed directly to the
+final parameter of B<mount>(2) when mounting the root device. Do not attempt to
+pass flags such as C<rw> or C<relatime> here.
+
+=item B<rw>
+
+Specifies that the root device should be mounted as read-write. This is usually
+a bad idea. geninit will default to mounting the root device as read-only. It is
+up to your B<init> to remount the device read-write (which usually occurs after
+a fsck has been performed).
 
 =back
 
 =head1 BUILDERS
 
 Builders are bash scripts that are executed during build time in order to add
-functionality to the image. They are sourced from the appropriate config file,
-and run in array index order. Builders may draw in an additional hookscript for
-use at runtime.
+functionality to the image. They are sourced from geninit's config file, and
+run in array index order. Builders may draw in an additional hookscript for use
+at runtime.
 
 At a minimum, builders must define a function called I<build>, which contains
 instructions on what geninit should add to the image. See the B<BUILDER API>
@@ -247,8 +257,8 @@ add_checked_modules call will be added to the resulting image.
 
 =item B<all_all_modules> I<class>...
 
-Identical to B<add_checked_modules> with the exception that no comparison
-against the autodetected module list is performed.
+Similar to B<add_checked_modules>, excepting that no comparison against the
+autodetected module list is performed.
 
 =item B<add_file> I<source> [I<path>]
 
@@ -276,10 +286,10 @@ specified, the permissions of the FIFO will be 644.
 Add a symlink to the image, located at the absolute path specified by link,
 and pointing to the path specified by target.
 
-=item B<use_hookscript> [I<script>]
+=item B<use_hookscript>
 
-Indicate that a script should be added to be run during bootstrap. Unless
-specified, geninit will look for a script by the same name as the builder.
+Indicate that a script should be added to be run during bootstrap. geninit
+will look to add a script by the same name as the builder.
 
 =back
 
