@@ -7,7 +7,7 @@
 ifneq (,$(wildcard .git))
 	VERSION = $(shell git describe --always)
 else
-	VERSION = 0.1
+	VERSION = 0.2
 endif
 
 all: init doc
