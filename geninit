@@ -288,9 +288,11 @@ __build_image() { # {{{
   fi
 
   { # create delicious config
-    printf '%s %d' '%MODULES%' "${#modules[*]}"
-    printf ' %s' "${modules[@]}"
-    printf '\n'
+    if (( ${#modules[*]} )); then
+      printf '%s %d' '%MODULES%' "${#modules[*]}"
+      printf ' %s' "${modules[@]}"
+      printf '\n'
+    fi
 
     printf '%s' '%HOOKS%'
     printf ' %s' "${builders[@]}"
