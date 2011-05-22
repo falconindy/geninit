@@ -57,8 +57,9 @@ install: init install-dirs install-doc
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit/builders builders/*
 	install -m644 -t ${DESTDIR}${PREFIX}/share/geninit libinit geninit.api geninit.quirks
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit init
-	install -m755 -t ${DESTDIR}${PREFIX}/bin lsinitramfs
-	sed "s#^\(declare.\+_sharedir\)=.*#\1=${PREFIX}/share/geninit#" < \
+	sed "s/%VERSION%/${VERSION}/" < lsinitramfs > ${DESTDIR}${PREFIX}/bin/lsinitramfs
+	chmod 755 ${DESTDIR}${PREFIX}/bin/lsinitramfs
+	sed "s#^\(declare.\+_sharedir\)=.*#\1=${PREFIX}/share/geninit#;s/%VERSION%/${VERSION}/" < \
 	  geninit > ${DESTDIR}${PREFIX}/sbin/geninit
 	chmod 755 ${DESTDIR}${PREFIX}/sbin/geninit
 .PHONY: install

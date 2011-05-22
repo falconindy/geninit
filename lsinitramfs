@@ -33,6 +33,7 @@ die() {
 
 usage() {
   cat<<USAGE
+lsinitramfs %VERSION%
 usage: ${0##*/} [options] <initramfs>
 
   Options:
