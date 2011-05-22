@@ -20,9 +20,6 @@ build() {
   add_binary /sbin/modprobe
   add_binary /sbin/blkid
 
-  # we need this for hooks to run
-  add_symlink /bin/busybox /bin/sh
-
   add_file /etc/modprobe.d/usb-load-ehci-first.conf
 }
 
