@@ -77,13 +77,13 @@ add_module() { # {{{
   local -a firmware moddeps
   local modpath= module= mod= dep=
 
-  module=${1%.ko?(.gz)}
+  module=${1%%.*}
 
   if [[ -z "$basedir" ]]; then # fast path =)
     read -rd '' modpath < <(__kmodinfo -n "$module" 2>/dev/null)
   else # slow path =(
-    read -rd '' modpath < <(find "$basedir$moduledir/kernel" -type f \
-        -name "$module.ko" -o -name "$module.ko.gz" -print0)
+    read -rd '' modpath < <(find "$basedir$moduledir/kernel" -type f
+        -name "$module.ko*"  -print0)
   fi
 
   [[ -z "$modpath" ]] && return 1
@@ -202,8 +202,8 @@ add_checked_modules() { # {{{
   pushd "$basedir$moduledir/kernel" &>/dev/null
   while read -rd '' mod; do
     mod=${mod##*/}
-    mods+=("${mod%.ko?(.gz)}")
-  done < <(find "$@" -type f \( -name '*.ko' -o -name '*.ko.gz' \) -print0 2>/dev/null)
+    mods+=("${mod%%.*}")
+  done < <(find "$@" -type f -name '*.ko*' -print0 2>/dev/null)
   popd &>/dev/null
 
   # only add what autodetect found if we have a module cache
