@@ -8,7 +8,7 @@
 #
 
 presets=(default failsafe)
-ALL_kver=2.6.38-ARCH
+ALL_kver=/boot/vmlinuz26
 ALL_config=/etc/geninit.conf
 
 default_image=/boot/initramfs-ARCH
