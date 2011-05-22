@@ -5,9 +5,13 @@
 # This file declares quirks for modules which have non-explicit dependencies.
 #
 
-declare -A modquirks
+declare -A modquirks compressquirks
 
+# modules which have non-explicit dependencies
 modquirks['fat']="nls_cp437"
 modquirks['ocfs2']="configfs"
 modquirks['libcrc32c']="crc32c crc32c_intel"
+
+# extra options necessary for compression methods
+compressquirks['xz']="--check=crc32"
 

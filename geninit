@@ -302,14 +302,12 @@ __build_image() { # {{{
     return
   fi
 
-  if [[ "$compress" != cat ]]; then
-    zopts=('-9')
-    [[ "$compress" == xz ]] && zopts+=('--check=crc32')
-  fi
+  [[ "$compress" != cat ]] && zopts=(${compressquirks[$compress]} '-9')
 
   msg "Creating$([[ "$compress" == cat ]] || printf " $compress") initramfs: $imagename"
 
   pushd "$buildroot" &>/dev/null
+  (( verbose )) && plain "compress cmd: $compress ${zopts[@]}"
   find . -print0 | bsdcpio -0oH newc | "$compress" "${zopts[@]}" > "$imagename.tmp"
   pipesave=("${PIPESTATUS[@]}") # save immediately
   popd &>/dev/null
