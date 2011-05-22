@@ -4,7 +4,11 @@
 # This file is part of geninit.
 #
 
-VERSION = 0.1
+ifneq (,$(wildcard .git))
+	VERSION = $(shell git describe --always)
+else
+	VERSION = 0.1
+endif
 
 all: init doc
 
@@ -31,6 +35,7 @@ DISTFILES := \
 	libinit \
 	init.c \
 	example.preset \
+	README.pod \
 	Makefile
 
 init: init.c
@@ -54,7 +59,7 @@ install: init install-dirs install-doc
 	install -m755 -t ${DESTDIR}${PREFIX}/share/geninit init
 	install -m755 -t ${DESTDIR}${PREFIX}/bin lsinitramfs
 	sed "s#^\(declare.\+_sharedir\)=.*#\1=${PREFIX}/share/geninit#" < \
-		geninit > ${DESTDIR}${PREFIX}/sbin/geninit
+	  geninit > ${DESTDIR}${PREFIX}/sbin/geninit
 	chmod 755 ${DESTDIR}${PREFIX}/sbin/geninit
 .PHONY: install
 
@@ -64,15 +69,17 @@ strip: init
 
 doc: geninit.8
 geninit.8: README.pod
-	pod2man --section=8 --center="geninit manual" --name="GENINIT" --release="geninit ${VERSION}" $< > $@
+	pod2man --section=8 \
+	        --center="geninit manual" \
+	        --name="GENINIT" \
+	        --release="geninit ${VERSION}" \
+	        $< > $@
 .PHONY: doc
 
 dist:
-	mkdir geninit-${VERSION}
-	cp -r ${DISTFILES} geninit-${VERSION}
-	tar czf geninit-${VERSION}.tar.gz ${DISTFILES}
-	${RM} -r geninit-${VERSION}
-.PHONY:
+	git archive --format=tar --prefix=geninit-${VERSION}/ HEAD | \
+	  gzip -9 > geninit-${VERSION}.tar.gz
+.PHONY: dist
 
 clean:
 	${RM} init.o init geninit.8
