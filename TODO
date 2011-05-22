@@ -1,2 +1,2 @@
-* cleanup and import more hooks
-* verify encrypt support
+* verify encrypt support with keyfiles
+* add support for custom mounters
