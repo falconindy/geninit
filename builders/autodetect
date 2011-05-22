@@ -7,8 +7,8 @@ build() {
   fi
 
   # generate a list of modules from aliases in /sys/devices
-  find /sys/devices/ -name modalias -exec sort -u {} + |\
-    xargs -I {} modprobe -d "${basedir:-/}" --set-version "$kernver" --resolve-alias {} |\
+  find /sys/devices -name modalias -exec sort -u {} + |\
+    xargs modprobe -d "${basedir:-/}" --set-version "$kernver" -aR |\
     sort -u >>"$autodetect_cache"
 
   if (( UID == 0 )) || [[ $(groups) == *disk* ]]; then
