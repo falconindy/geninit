@@ -1,2 +1,3 @@
 * verify encrypt support with keyfiles
 * add support for custom mounters
+* add support for non-udev mdadm
