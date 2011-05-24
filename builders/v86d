@@ -1,6 +1,8 @@
 #!/bin/bash
 
 build() {
+  add_module uvesafb
+
   add_binary "/sbin/v86d"
   add_file "/etc/modprobe.d/uvesafb.conf"
 }
