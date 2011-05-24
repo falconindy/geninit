@@ -655,6 +655,7 @@ static void run_hooks(void) { /* {{{ */
   char *hook;
   FILE *fp;
 
+  putenv("PATH=/usr/sbin:/usr/bin:/sbin:/bin");
   setenv("FDINIT", TOSTRING(CHILD_WRITE_FD), 1);
   line[0] = '\0';
 
