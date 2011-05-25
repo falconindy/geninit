@@ -135,7 +135,7 @@ add_binary() { # {{{
 
   if ! "$ld_so" --verify "$binary" &>/dev/null; then
     # this isn't a binary!
-    __add_file "${binary#$basedir}" "$binary" "$mode"
+    __add_file "$dest" "$binary" "$mode"
     return $? # return with __add_file's return val
   fi
 

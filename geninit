@@ -254,8 +254,8 @@ __build_image() { # {{{
   for file in "${files[@]}"; do
     local src=${file%%::*}
     local dest=${file##*::}
-    [[ "$dest" ]] || dest=$src
-    add_binary "$src" "$dest" || { (( ++errors)); error "File not found: $file"; }
+    [[ $dest ]] || dest=$src
+    add_binary "$src" "$dest" || { (( ++errors )); error "File not found: $file"; }
   done
 
   # parse builder array
