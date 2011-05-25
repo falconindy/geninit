@@ -21,6 +21,7 @@
 #include <sys/klog.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/vfs.h>
@@ -215,7 +216,7 @@ done:
 
 static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
   int statloc, pfds[2];
-  ssize_t total, len;
+  ssize_t len, total = 0;
   char readbuf[BUFSIZ];
   pid_t pid;
 
@@ -243,13 +244,12 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
     close(pfds[1]);
 
     execv(argv[0], argv);
-    fprintf(stderr, "exec: %s: %s", argv[0], strerror(errno));
+    fprintf(stderr, "exec: %s: %s\n", argv[0], strerror(errno));
     _exit(errno);
   }
 
   close(pfds[1]); /* unused by parent */
 
-  total = 0;
   memset(buffer, 0, BUFSIZ);
   while (1) {
     len = read(pfds[0], readbuf, BUFSIZ);
@@ -271,11 +271,12 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
     memcpy(&buffer[total], readbuf, len);
     total += len;
   }
+
   close(pfds[0]);
 
   waitpid(pid, &statloc, 0);
   if (WIFEXITED(statloc) && WEXITSTATUS(statloc) != 0) {
-    err("hook `%s' exited with status %d\n", argv[0], WEXITSTATUS(statloc));
+    err("`%s' exited with status %d\n", argv[0], WEXITSTATUS(statloc));
     return -(WEXITSTATUS(statloc));
   }
 
@@ -833,8 +834,30 @@ static void try_create_root(void) { /* {{{ */
 } /* }}} */
 
 static int mount_root(void) { /* {{{ */
-  char *root, *fstype, *data;
+  char *mount_handler, *root, *fstype, *data;
   int ret = 1;
+
+  mount_handler = getenv("mount_handler");
+  if (mount_handler != NULL) {
+    struct statvfs rootvfs, newrootvfs;
+    char *argv[] = { mount_handler, NULL };
+    char response[BUFSIZ];
+
+    if (!bbox_installed) { /* unlikely */
+      char *bboxinstall[] = { BUSYBOX, "--install", NULL };
+      forkexecwait(bboxinstall);
+      bbox_installed = 1;
+    }
+
+    if (read_child_response(argv, response) > 0) {
+      parse_envstring(response);
+    }
+
+    statvfs("/", &rootvfs);
+    statvfs(NEWROOT, &newrootvfs);
+
+    return !(rootvfs.f_fsid = newrootvfs.f_fsid);
+  }
 
   root = getenv("root");
   data = getenv("rootflags");
