@@ -1,0 +1,6 @@
+#!/bin/sh
+
+mknod /dev/fb c 29 0 &>/dev/null
+
+/bin/plymouthd
+/bin/plymouth --show-splash

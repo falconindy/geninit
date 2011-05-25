@@ -1,0 +1,14 @@
+#!/bin/bash
+
+build() {
+  add_binary "/bin/plymouth"
+  add_file "/etc/plymouth"
+}
+
+helpmsg() {
+  cat<<HELPEOF
+This builder includes support for Plymouth
+HELPEOF
+}
+
+# vim: set et ts=2 sw=2:
