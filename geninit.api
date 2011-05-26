@@ -187,6 +187,19 @@ use_hookscript() { # {{{
   __add_file "/hooks/$script" "$basedir$_sharedir/hooks/$script" 755
 } # }}}
 
+use_mounthook() { # {{{
+  # specifies that a builder should install a custom mount handler.
+
+  local mounthook=${1:-$builder}
+
+  if [[ ! -f $basedir$_sharedir/mount/$mounthook ]]; then
+    error "unable to find mount hook: $mounthook"
+    return 1
+  fi
+
+  __add_file "/mount/$mounthook" "$basedir$_sharedir/mount/$mounthook" 755
+} # }}}
+
 add_checked_modules() { # {{{
   # add a class of modules, as a dir relative to /lib/modules/$kernver/kernel.
   # if you need to block addition of modules, you can add glob patterns to the
