@@ -269,6 +269,12 @@ __build_image() { # {{{
     fi
 
     ( # subshell to prevent namespace pollution
+      set -E
+      declare -i err=0
+
+      # only catch errors in the build function
+      trap 'if [[ $FUNCNAME == build ]]; then (( ++err )); fi' ERR
+
       . "$builderdir/$builder"
       if ! type -t build >/dev/null; then
         error "no build function found in builder '$builder'"
@@ -277,7 +283,9 @@ __build_image() { # {{{
 
       msg2 "Building: [%s]" "$builder"
       build
+      exit $err
     )
+    (( $? > 0 )) && (( ++errors ))
   done
 
   # only create depmod files if there's modules added
@@ -326,7 +334,7 @@ __build_image() { # {{{
   if (( !errors )); then
     msg "Image creation completed successfully"
   else
-    warning "Errors were encountered during creation. The image may not be complete."
+    warning "An image was created, but it may not be complete."
   fi
 
   mv "$imagename"{.tmp,}

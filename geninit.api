@@ -226,6 +226,9 @@ add_checked_modules() { # {{{
   [[ -s "$autodetect_cache" && -z "$NOAUTO" ]] &&
     IFS=$'\n' read -rd '' -a mods < <(grep -xFf <(printf '%s\n' "${mods[@]//-/_}") "$autodetect_cache")
 
+  # return value based on the whether or not modules _could_ be added
+  ret=${#mods[*]}
+
   for mod in "${mods[@]}"; do
     # check for filter match
     for filter in "${MODFILTER[@]}"; do
@@ -234,6 +237,8 @@ add_checked_modules() { # {{{
 
     add_module "$mod" && (( ++ret ))
   done
+
+  (( ret == 0 )) && plain "${YELLOW}WARNING:$NC no modules added"
 
   # return 0 on modules added, else 1
   return $(( ! ret ))
