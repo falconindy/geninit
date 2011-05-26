@@ -247,7 +247,7 @@ __build_image() { # {{{
 
   # add extra modules from config
   for mod in ${modules[@]}; do
-    add_module "$mod" || { (( ++errors)); error "Module not found: $mod"; }
+    add_module "$mod" || (( ++errors ))
   done
 
   # add extra files from config

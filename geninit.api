@@ -86,7 +86,10 @@ add_module() { # {{{
         -name "$module.ko*"  -print0)
   fi
 
-  [[ -z "$modpath" ]] && return 1
+  if [[ -z "$modpath" ]]; then
+    error "Module not found: $module"
+    return 1
+  fi
 
   __add_file "${modpath#$basedir}" "$modpath" 644 || return 1
 
