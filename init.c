@@ -21,7 +21,6 @@
 #include <sys/klog.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
-#include <sys/statvfs.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/vfs.h>
@@ -839,9 +838,11 @@ static int mount_root(void) { /* {{{ */
 
   mount_handler = getenv("mount_handler");
   if (mount_handler != NULL) {
-    struct statvfs rootvfs, newrootvfs;
-    char *argv[] = { mount_handler, NULL };
-    char response[BUFSIZ];
+    struct stat rootdev, newrootdev;
+    char response[BUFSIZ], handlerpath[PATH_MAX];
+    char *argv[] = { handlerpath, NULL };
+
+    snprintf(handlerpath, PATH_MAX, "/mount/%s", mount_handler);
 
     if (!bbox_installed) { /* unlikely */
       char *bboxinstall[] = { BUSYBOX, "--install", NULL };
@@ -853,10 +854,10 @@ static int mount_root(void) { /* {{{ */
       parse_envstring(response);
     }
 
-    statvfs("/", &rootvfs);
-    statvfs(NEWROOT, &newrootvfs);
+    stat("/", &rootdev);
+    stat(NEWROOT, &newrootdev);
 
-    return !(rootvfs.f_fsid = newrootvfs.f_fsid);
+    return !(rootdev.st_dev = newrootdev.st_dev);
   }
 
   root = getenv("root");
