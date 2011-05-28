@@ -432,10 +432,10 @@ static void mount_setup(void) { /* {{{ */
   mount("run", "/run", "tmpfs", TMPFS_FLAGS, "mode=0755,size=10M");
 
   /* ENODEV returned on non-existant FS */
-  ret = mount("udev", "/dev", "devtmpfs", MS_NOSUID, "mode=0755,size=10M");
+  ret = mount("udev", "/dev", "devtmpfs", MS_NOSUID, "mode=0755");
   if (ret == -1 && errno == ENODEV) {
     /* devtmpfs not available, use standard tmpfs */
-    mount("udev", "/dev", "tmpfs", MS_NOSUID, "mode=0755,size=10M");
+    mount("udev", "/dev", "tmpfs", MS_NOSUID, "mode=0755,size=1024k");
 
     /* create necessary nodes */
     mknod("/dev/console", S_IFCHR|0600, makedev(5, 1));
