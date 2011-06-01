@@ -39,7 +39,6 @@
 #define TOSTRING(x)     QUOTE(x)
 
 #define CMDLINE_SIZE    257       /* 256 max cmdline len + NULL */
-#define TMPFS_FLAGS     MS_NOEXEC|MS_NODEV|MS_NOSUID
 
 #define CHILD_WRITE_FD  6
 
@@ -427,9 +426,9 @@ static void mount_setup(void) { /* {{{ */
   int ret;
 
   /* setup basic filesystems */
-  mount("proc", "/proc", "proc", TMPFS_FLAGS, NULL);
-  mount("sys", "/sys", "sysfs", TMPFS_FLAGS, NULL);
-  mount("run", "/run", "tmpfs", TMPFS_FLAGS, "mode=0755,size=10M");
+  mount("proc", "/proc", "proc", MS_NOEXEC|MS_NODEV|MS_NOSUID, NULL);
+  mount("sys", "/sys", "sysfs", MS_NOEXEC|MS_NODEV|MS_NOSUID, NULL);
+  mount("run", "/run", "tmpfs", MS_NODEV|MS_NOSUID, "mode=0755,size=10M");
 
   /* ENODEV returned on non-existant FS */
   ret = mount("udev", "/dev", "devtmpfs", MS_NOSUID, "mode=0755");
