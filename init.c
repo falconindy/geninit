@@ -470,18 +470,17 @@ static void disable_modules(void) { /* {{{ */
   }
 
   /* ensure parent dirs exist */
-  mkdir("/etc", 0755);
-  mkdir("/etc/modprobe.d", 0755);
+  mkdir("/run/modprobe.d", 0755);
 
-  fp = fopen("/etc/modprobe.d/initcpio.conf", "w");
+  fp = fopen("/run/modprobe.d/initcpio.conf", "w");
   if (!fp) {
-    perror("error: /etc/modprobe.d/initcpio.conf");
+    perror("error: /run/modprobe.d/initcpio.conf");
     return;
   }
 
   var = strdup(getenv("disablemodules"));
   for (tok = strtok(var, ","); tok; tok = strtok(NULL, ",")) {
-    fprintf(fp, "install %s /bin/false\n", tok);
+    fprintf(fp, "blacklist %s\n", tok);
   }
 
   fclose(fp);
