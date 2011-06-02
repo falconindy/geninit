@@ -238,6 +238,7 @@ __build_image() { # {{{
   fi
 
   (( dryrun )) && msg "Starting dry run: %s" "$kernver" || msg "Starting build: %s" "$kernver"
+  (( verbose )) && msg2 "using config file: %s" "$basedir$config"
 
   # we always need the linker
   file=$(readlink -e "$ld_so")
