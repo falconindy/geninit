@@ -91,7 +91,8 @@ add_module() { # {{{
     return 1
   fi
 
-  __add_file "${modpath#$basedir}" "$modpath" 644 || return 1
+  __add_file "${modpath#$basedir}" "$modpath" 644
+  [[ $? = @(0|$EEXIST) ]] || return 1
 
   # grab firmware
   IFS=',' read -rd '' -a firmware < <(__kmodinfo -F firmware "$modpath")
