@@ -460,32 +460,6 @@ static void put_cmdline(void) { /* {{{ */
   fclose(fp);
 } /* }}} */
 
-static void disable_modules(void) { /* {{{ */
-  char *tok, *var;
-  FILE *fp;
-
-  if (getenv("disablemodules") == NULL) {
-    return;
-  }
-
-  /* ensure parent dirs exist */
-  mkdir("/run/modprobe.d", 0755);
-
-  fp = fopen("/run/modprobe.d/initcpio.conf", "w");
-  if (!fp) {
-    perror("error: /run/modprobe.d/initcpio.conf");
-    return;
-  }
-
-  var = strdup(getenv("disablemodules"));
-  for (tok = strtok(var, ","); tok; tok = strtok(NULL, ",")) {
-    fprintf(fp, "blacklist %s\n", tok);
-  }
-
-  fclose(fp);
-  free(var);
-} /* }}} */
-
 static void launch_udev(void) { /* {{{ */
   char *argv[] = { UDEVD, "--resolve-names=never", NULL };
 
@@ -974,7 +948,6 @@ int main(int argc, char *argv[]) {
 
   mount_setup();                /* create early tmpfs mountpoints */
   put_cmdline();                /* parse cmdline and set environment */
-  disable_modules();            /* blacklist modules passed in on cmdline */
   launch_udev();                /* try to launch udev */
   load_extra_modules();         /* load modules passed in on cmdline */
   trigger_udev_events();        /* read and process uevent queue */
