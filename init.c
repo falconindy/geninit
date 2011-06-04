@@ -39,7 +39,6 @@
 #define TOSTRING(x)     QUOTE(x)
 
 #define CMDLINE_SIZE    257       /* 256 max cmdline len + NULL */
-#define TMPFS_FLAGS     MS_NOEXEC|MS_NODEV|MS_NOSUID
 
 #define CHILD_WRITE_FD  6
 
@@ -215,7 +214,7 @@ done:
 
 static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
   int statloc, pfds[2];
-  ssize_t total, len;
+  ssize_t len, total = 0;
   char readbuf[BUFSIZ];
   pid_t pid;
 
@@ -243,13 +242,12 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
     close(pfds[1]);
 
     execv(argv[0], argv);
-    fprintf(stderr, "exec: %s: %s", argv[0], strerror(errno));
+    fprintf(stderr, "exec: %s: %s\n", argv[0], strerror(errno));
     _exit(errno);
   }
 
   close(pfds[1]); /* unused by parent */
 
-  total = 0;
   memset(buffer, 0, BUFSIZ);
   while (1) {
     len = read(pfds[0], readbuf, BUFSIZ);
@@ -271,11 +269,12 @@ static ssize_t read_child_response(char **argv, char *buffer) { /* {{{ */
     memcpy(&buffer[total], readbuf, len);
     total += len;
   }
+
   close(pfds[0]);
 
   waitpid(pid, &statloc, 0);
   if (WIFEXITED(statloc) && WEXITSTATUS(statloc) != 0) {
-    err("hook `%s' exited with status %d\n", argv[0], WEXITSTATUS(statloc));
+    err("`%s' exited with status %d\n", argv[0], WEXITSTATUS(statloc));
     return -(WEXITSTATUS(statloc));
   }
 
@@ -427,15 +426,15 @@ static void mount_setup(void) { /* {{{ */
   int ret;
 
   /* setup basic filesystems */
-  mount("proc", "/proc", "proc", TMPFS_FLAGS, NULL);
-  mount("sys", "/sys", "sysfs", TMPFS_FLAGS, NULL);
-  mount("run", "/run", "tmpfs", TMPFS_FLAGS, "mode=0755,size=10M");
+  mount("proc", "/proc", "proc", MS_NOEXEC|MS_NODEV|MS_NOSUID, NULL);
+  mount("sys", "/sys", "sysfs", MS_NOEXEC|MS_NODEV|MS_NOSUID, NULL);
+  mount("run", "/run", "tmpfs", MS_NODEV|MS_NOSUID, "mode=0755,size=10M");
 
   /* ENODEV returned on non-existant FS */
-  ret = mount("udev", "/dev", "devtmpfs", MS_NOSUID, "mode=0755,size=10M");
+  ret = mount("udev", "/dev", "devtmpfs", MS_NOSUID, "mode=0755");
   if (ret == -1 && errno == ENODEV) {
     /* devtmpfs not available, use standard tmpfs */
-    mount("udev", "/dev", "tmpfs", MS_NOSUID, "mode=0755,size=10M");
+    mount("udev", "/dev", "tmpfs", MS_NOSUID, "mode=0755,size=1024k");
 
     /* create necessary nodes */
     mknod("/dev/console", S_IFCHR|0600, makedev(5, 1));
@@ -459,33 +458,6 @@ static void put_cmdline(void) { /* {{{ */
   }
 
   fclose(fp);
-} /* }}} */
-
-static void disable_modules(void) { /* {{{ */
-  char *tok, *var;
-  FILE *fp;
-
-  if (getenv("disablemodules") == NULL) {
-    return;
-  }
-
-  /* ensure parent dirs exist */
-  mkdir("/etc", 0755);
-  mkdir("/etc/modprobe.d", 0755);
-
-  fp = fopen("/etc/modprobe.d/initcpio.conf", "w");
-  if (!fp) {
-    perror("error: /etc/modprobe.d/initcpio.conf");
-    return;
-  }
-
-  var = strdup(getenv("disablemodules"));
-  for (tok = strtok(var, ","); tok; tok = strtok(NULL, ",")) {
-    fprintf(fp, "install %s /bin/false\n", tok);
-  }
-
-  fclose(fp);
-  free(var);
 } /* }}} */
 
 static void launch_udev(void) { /* {{{ */
@@ -833,8 +805,32 @@ static void try_create_root(void) { /* {{{ */
 } /* }}} */
 
 static int mount_root(void) { /* {{{ */
-  char *root, *fstype, *data;
+  char *mount_handler, *root, *fstype, *data;
   int ret = 1;
+
+  mount_handler = getenv("mount_handler");
+  if (mount_handler != NULL) {
+    struct stat rootdev, newrootdev;
+    char response[BUFSIZ], handlerpath[PATH_MAX];
+    char *argv[] = { handlerpath, NULL };
+
+    snprintf(handlerpath, PATH_MAX, "/mount/%s", mount_handler);
+
+    if (!bbox_installed) { /* unlikely */
+      char *bboxinstall[] = { BUSYBOX, "--install", NULL };
+      forkexecwait(bboxinstall);
+      bbox_installed = 1;
+    }
+
+    if (read_child_response(argv, response) > 0) {
+      parse_envstring(response);
+    }
+
+    stat("/", &rootdev);
+    stat(NEWROOT, &newrootdev);
+
+    return !(rootdev.st_dev = newrootdev.st_dev);
+  }
 
   root = getenv("root");
   data = getenv("rootflags");
@@ -952,7 +948,6 @@ int main(int argc, char *argv[]) {
 
   mount_setup();                /* create early tmpfs mountpoints */
   put_cmdline();                /* parse cmdline and set environment */
-  disable_modules();            /* blacklist modules passed in on cmdline */
   launch_udev();                /* try to launch udev */
   load_extra_modules();         /* load modules passed in on cmdline */
   trigger_udev_events();        /* read and process uevent queue */

@@ -86,9 +86,13 @@ add_module() { # {{{
         -name "$module.ko*"  -print0)
   fi
 
-  [[ -z "$modpath" ]] && return 1
+  if [[ -z "$modpath" ]]; then
+    error "Module not found: $module"
+    return 1
+  fi
 
-  __add_file "${modpath#$basedir}" "$modpath" 644 || return 1
+  __add_file "${modpath#$basedir}" "$modpath" 644
+  [[ $? = @(0|$EEXIST) ]] || return 1
 
   # grab firmware
   IFS=',' read -rd '' -a firmware < <(__kmodinfo -F firmware "$modpath")
@@ -185,6 +189,19 @@ use_hookscript() { # {{{
   fi
 
   __add_file "/hooks/$script" "$basedir$_sharedir/hooks/$script" 755
+} # }}}
+
+use_mounthook() { # {{{
+  # specifies that a builder should install a custom mount handler.
+
+  local mounthook=${1:-$builder}
+
+  if [[ ! -f $basedir$_sharedir/mount/$mounthook ]]; then
+    error "unable to find mount hook: $mounthook"
+    return 1
+  fi
+
+  __add_file "/mount/$mounthook" "$basedir$_sharedir/mount/$mounthook" 755
 } # }}}
 
 add_checked_modules() { # {{{
