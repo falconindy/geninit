@@ -121,12 +121,6 @@ have been run, but prior to the root device being mounted.
 An optional parameter to specify an alternate init system for userspace. If not
 specified, this defaults to C</sbin/init>.
 
-=item B<loglevel=>I<#>
-
-Sets the kernel log priority according to the number provided (1-8), with
-larger values producing more output. See B<klogctl>(3) for an explanation of
-the values.
-
 =item B<root=>I<device>
 
 The root device to be mounted before leaving early userspace. This can take
