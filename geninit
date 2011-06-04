@@ -286,7 +286,7 @@ __build_image() { # {{{
     msg "Generating module dependencies"
     depmod -b "$buildroot" "$kernver" || (( ++errors ))
     # trim excess depmod files
-    rm "$buildroot$moduledir"/modules.!(dep|alias|symbols)
+    rm "$buildroot$moduledir"/modules.!(dep.bin|alias.bin|symbols.bin)
   fi
 
   { # create delicious config
