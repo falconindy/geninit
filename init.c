@@ -652,15 +652,6 @@ static void run_hooks(void) { /* {{{ */
 
 } /* }}} */
 
-static void check_for_break(void) { /* {{{ */
-  if (getenv("break") == NULL) {
-    return;
-  }
-
-  msg("break requested. type 'exit' or 'logout' to resume\n");
-  start_rescue_shell();
-} /* }}} */
-
 static int wait_for_root(void) { /* {{{ */
   char *rootdelay, *root;
   int delay = 0;
@@ -932,7 +923,11 @@ int main(int argc, char *argv[]) {
   trigger_udev_events();        /* read and process uevent queue */
   disable_hooks();              /* delete hooks specified on cmdline */
   run_hooks();                  /* run remaining hooks */
-  check_for_break();            /* did the user request a shell? */
+
+  if (getenv("break") != NULL) {
+    msg("break requested. type 'exit' or 'logout' to resume\n");
+    start_rescue_shell();
+  }
 
   if (wait_for_root() != 0) {
     try_create_root();          /* ensure that root shows up */
