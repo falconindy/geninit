@@ -16,9 +16,6 @@ build() {
   for rules in {50-{firmware,udev-default},60-persistent-storage,80-drivers}.rules; do
     add_file "/lib/udev/rules.d/$rules"
   done
-
-  # there's much better ways to do module blacklisting
-  add_symlink /sbin/modprobe /lib/udev/load-modules.sh
 }
 
 helpmsg() {
