@@ -129,6 +129,7 @@ a number of different formats, such as:
   root=/dev/sda2
   root=LABEL=root
   root=UUID=037b9d94-148e-4ee4-8d38-67bfe15bb535
+  root=PARTUUID=037b9d94-148e-4ee4-8d38-67bfe15bb535
   root=MAJOR:MINOR
 
 This parameter, for obvious reasons, must be specified.

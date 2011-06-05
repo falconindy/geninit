@@ -699,19 +699,21 @@ static int wait_for_root(void) { /* {{{ */
 
 static void try_create_root(void) { /* {{{ */
   dev_t rootdev;
-  char *root;
+  char *root, *tag = NULL;
 
   root = getenv("root");
 
   if (strncmp(root, "UUID=", 5) == 0 ||
       strncmp(root, "LABEL=", 6) == 0) {
-    /* resolve UUID= or LABEL= syntax */
-    char *key, *val, *res;
+    tag = root;
+  } else if (strncmp(root, "PARTUUID=", 9) == 0) {
+    tag = &root[4];
+  }
 
-    key = val = root;
-    strsep(&val, "=");
+  if (tag) {
+    char *res;
 
-    res = blkid_evaluate_tag(key, val, NULL);
+    res = blkid_evaluate_tag(tag, NULL, NULL);
     if (!res) {
       err("failed to resolve %s to a root device", root);
       return;
