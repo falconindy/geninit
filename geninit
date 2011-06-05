@@ -398,7 +398,7 @@ __build_preset() { # {{{
 } # }}}
 
 __kmodinfo() { # {{{
-  modinfo -0k $kernver "$@"
+  modinfo -b "$basedir" -0k $kernver "$@"
 } # }}}
 
 __ldd() { # {{{
