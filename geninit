@@ -248,7 +248,8 @@ __build_image() { # {{{
 
   # add extra modules from config
   for mod in ${modules[@]}; do
-    add_module "$mod" || (( ++errors ))
+    add_module "$mod"
+    [[ $? = @(0|$EEXIST) ]] || (( ++errors ))
   done
 
   # add extra files from config
