@@ -218,9 +218,8 @@ add_checked_modules() { # {{{
   # find modules by class (e.g. drivers/ata)
   pushd "$basedir$moduledir/kernel" &>/dev/null
   while read -rd '' mod; do
-    mod=${mod##*/}
     mods+=("${mod%%.*}")
-  done < <(find "$@" -type f -name '*.ko*' -print0 2>/dev/null)
+  done < <(find "$@" -type f -name '*.ko*' -printf '%f\0' 2>/dev/null)
   popd &>/dev/null
 
   # only add what autodetect found if we have a module cache
