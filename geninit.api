@@ -79,13 +79,7 @@ add_module() { # {{{
 
   module=${1%%.*}
 
-  if [[ -z "$basedir" ]]; then # fast path =)
-    read -rd '' modpath < <(__kmodinfo -n "$module" 2>/dev/null)
-  else # slow path =(
-    read -rd '' modpath < <(find "$basedir$moduledir/kernel" -type f
-        -name "$module.ko*"  -print0)
-  fi
-
+  read -rd '' modpath < <(__kmodinfo -n "$module" 2>/dev/null)
   if [[ -z "$modpath" ]]; then
     error "Module not found: $module"
     return 1
