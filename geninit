@@ -60,17 +60,17 @@ declare skipbuilders=
 
 plain() { # {{{
   local mesg=$1; shift
-  printf "$BOLD    $mesg$NC\n" "$@" >&2
+  printf "$BOLD    $mesg$NC\n" "$@" >&1
 } # }}}
 
 msg() { # {{{
   local mesg=$1; shift
-  printf "$GREEN==>$NC$BOLD $mesg$NC\n" "$@" >&2
+  printf "$GREEN==>$NC$BOLD $mesg$NC\n" "$@" >&1
 } # }}}
 
 msg2() { # {{{
   local mesg=$1; shift
-  printf "$BLUE  ->$NC$BOLD $mesg$NC\n" "$@" >&2
+  printf "$BLUE  ->$NC$BOLD $mesg$NC\n" "$@" >&1
 } # }}}
 
 warning() { # {{{
