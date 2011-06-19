@@ -131,14 +131,10 @@ add_binary() { # {{{
   dest=${2:-$binary}
   mode=$(stat -c %a "$binary")
 
-  if ! "$ld_so" --verify "$binary" &>/dev/null; then
-    # this isn't a binary!
-    __add_file "$dest" "$binary" "$mode"
-    return $? # return with __add_file's return val
-  fi
+  # the file itself
+  __add_file "$dest" "$binary" "$mode"
 
-  # the binary itself
-  __add_file "${dest#$basedir}" "${binary#$basedir}" 755 || return 1
+  "$ld_so" --verify "$binary" &>/dev/null || return # not a binary!
 
   # resolve sodeps
   regex='^[[:space:]]*[^/].+ => (.*) \(.*\)'
