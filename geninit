@@ -61,6 +61,8 @@ declare ocompress=
 declare preset=
 declare skipbuilders=
 
+unset GREP_OPTIONS # i hate you
+
 # -------------------------- #
 ##  general util functions  ##
 # -------------------------- #
