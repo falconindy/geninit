@@ -46,6 +46,13 @@ declare -i dryrun=0
 declare -i savebuildroot=0
 declare -i verbose=0
 
+# colors
+declare NC=
+declare BOLD=
+declare GREEN=
+declare RED=
+declare YELLOW=
+
 declare kernver=$(uname -r)
 declare basedir=
 declare config=
