@@ -18,6 +18,6 @@ if [ -e /sys/class/misc/device-mapper ]; then
 
   msg "Activating logical volumes..."
   [ -d /etc/lvm ] && /sbin/lvm vgscan
-  /sbin/lvm ${quiet:+--quiet} vgchange --sysinit -ay
+  /sbin/lvm vgchange ${quiet:+--quiet} --sysinit -ay
 fi
 
