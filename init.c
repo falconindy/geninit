@@ -29,10 +29,10 @@
 /* util-linux */
 #include <blkid/blkid.h>
 
-#define msg(...)  {if (!quiet) fprintf(stderr, ":: " __VA_ARGS__);}
-#define err(...)  {fprintf(stderr, "error: " __VA_ARGS__);}
-#define warn(...) {fprintf(stderr, "warning: " __VA_ARGS__);}
-#define die(...)  {err(__VA_ARGS__); _exit(1);}
+#define msg(...)  if (!quiet) fprintf(stderr, ":: " __VA_ARGS__)
+#define err(...)  fprintf(stderr, "error: " __VA_ARGS__)
+#define warn(...) fprintf(stderr, "warning: " __VA_ARGS__)
+#define die(...)  err(__VA_ARGS__); _exit(1)
 
 #define QUOTE(x)        #x
 #define TOSTRING(x)     QUOTE(x)
