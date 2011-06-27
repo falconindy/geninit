@@ -251,9 +251,8 @@ __build_image() { # {{{
 
   # we always need the linker
   file=$(readlink -e "$ld_so")
-  add_path_to_file "${ld_so#$basedir}" || (( ++errors ))
-  __add_slink "${ld_so#$basedir}" "${file#$basedir}" || (( ++errors ))
-  __add_file "${file#$basedir}" "${file#$basedir}" 755 || (( ++errors ))
+  __add_file "${file#$basedir}" "$file" 755 || (( ++errors ))
+  __add_slink "${ld_so#$basedir}" "$file" || (( ++errors ))
 
   # add extra modules from config
   for mod in ${modules[@]}; do
