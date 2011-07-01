@@ -74,33 +74,37 @@ add_module() { # {{{
 
   (( $# )) || return 1
 
-  local -a firmware moddeps
-  local modpath= module= mod= dep=
+  local -a deps
+  local modpath= module= mod= dep= field= value=
 
   module=${1%%.*}
 
-  read -rd '' modpath < <(__kmodinfo -n "$module" 2>/dev/null)
-  if [[ -z "$modpath" ]]; then
+  while IFS=':= ' read -r -d '' field value; do
+    case "$field" in
+      filename)
+        modpath=$value
+        ;;
+      depends)
+        IFS=',' read -r -a deps <<< "$value"
+        for dep in "${deps[@]}"; do
+          add_module "$dep"
+        done
+        ;;
+      firmware)
+        if [[ -e "$basedir/lib/firmware/$value" ]]; then
+          __add_file "/lib/firmware/$value" "$basedir/lib/firmware/$value"
+        fi
+        ;;
+    esac
+  done < <(modinfo "$module" -b "$basedir" -0k $kernver 2>/dev/null)
+
+  if [[ -z $modpath ]]; then
     error "Module not found: $module"
     return 1
   fi
 
   __add_file "${modpath#$basedir}" "$modpath" 644
   [[ $? = @(0|$EEXIST) ]] || return 1
-
-  # grab firmware
-  IFS=',' read -rd '' -a firmware < <(__kmodinfo -F firmware "$modpath")
-  for fw in "${firmware[@]}"; do
-    if [[ -e $basedir/lib/firmware/$fw ]]; then
-      __add_file "/lib/firmware/$fw" "$basedir/lib/firmware/$fw" 644
-    fi
-  done
-
-  # resolve deps
-  IFS=',' read -rd '' -a moddeps < <(__kmodinfo -F depends "$modpath")
-  for dep in "${moddeps[@]}"; do
-    add_module "$dep"
-  done
 
   # add in any quirks
   for mod in ${modquirks[$module]}; do

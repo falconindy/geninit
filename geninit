@@ -405,10 +405,6 @@ __build_preset() { # {{{
   done
 } # }}}
 
-__kmodinfo() { # {{{
-  modinfo -b "$basedir" -0k $kernver "$@"
-} # }}}
-
 __ldd() { # {{{
   LD_TRACE_LOADED_OBJECTS=1 "$ld_so" "$@"
 } # }}}
